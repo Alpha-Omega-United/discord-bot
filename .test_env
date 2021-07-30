@@ -1,0 +1,8 @@
+# This file includes the values needed to run on the test server
+# If you are using your own test server you will need to replace these
+
+# https://discord.com/developers/applications
+DISCORD_TOKEN="Your token"
+
+# The id of the test guild
+GUILD_ID=870732954907844608

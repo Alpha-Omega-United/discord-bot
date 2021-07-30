@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [ --fix=lf ]
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: black
+        name: Black
+        description: Formats the python source code using black.
+        language: system
+        entry: poetry run black --check .
+        require_serial: true
+        pass_filenames: false
+
+      - id: flake8
+        name: Flake8
+        description: Lints this repository using flake8.
+        language: system
+        entry: poetry run python -m flake8
+        require_serial: true
+        pass_filenames: false
