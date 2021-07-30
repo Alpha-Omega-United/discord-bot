@@ -30,11 +30,14 @@ class Bot(commands.Bot):
     def run(self) -> None:
         super().run(constants.TOKEN)
 
+    async def on_ready(self):
+        logger.info("Bot online.")
+
 
 def run() -> None:
     bot = Bot()
     slash = discord_slash.SlashCommand(bot, sync_commands=True)  # noqa: F841
-    bot.load_all_extension()
+    bot.load_all_extensions()
 
     logger.info("Starting bot")
     bot.run()

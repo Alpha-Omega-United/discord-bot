@@ -22,6 +22,6 @@ GUILD_ID = os.getenv("GUILD_ID", 797571990176661504)
 
 
 class Paths(NamedTuple):
-    src = pathlib.Path(__file__).parent
+    src = pathlib.Path("bot")
     cogs = src / "cogs"
     resources = src / "resources"
