@@ -3,6 +3,12 @@
 
 # https://discord.com/developers/applications
 DISCORD_TOKEN="Your token"
+DATABASE_URI = "Your Uri"
+DATABASE_NAME = "AoU"
 
-# The id of the test guild
+# Disables hidding private messages
+TESTING = 1
+
+# The ids of the test guild
 GUILD_ID=870732954907844608
+ADMIN_ROLE_ID=870732954933006387
