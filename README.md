@@ -1,4 +1,4 @@
-# AoT discord bot
+# AoT Discord Bot
 This is the custom discord bot used on the [Alpha Omega United](https://discord.gg/KPuHwjMyCH) discord server.
 The bot is written in python using [discord.py]() and [discord-py-slash-commands](),
 the project is managed with [poetry]().
