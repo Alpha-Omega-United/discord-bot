@@ -20,7 +20,9 @@ from bot.bot import Bot
 # twitch.tv/username
 # (if this does not match we assume it is just a normal username)
 TWITCH_URL = re.compile(r"^(https?:\/\/)?twitch\.tv\/(.+)$")
-TWITCH_USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]\w{0,24}$")
+
+TWITCH_TOKEN_ENDPOINT = "https://id.twitch.tv/oauth2/token"
+TWITCH_USER_ENDPOINT = "https://api.twitch.tv/helix/users"
 
 
 class LinkedData(TypedDict):
@@ -34,12 +36,49 @@ class Twitch(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.linked_accounts = bot.database["linked_accounts"]
+        self.token = None
 
-    async def get_twithc_id(self, twitch_name: str) -> int:
-        """Conntact the twitch bot about their id."""
-        # TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """Get twitch token."""
+        params = {
+            "client_id": constants.TWITCH_CLIENT_ID,
+            "client_secret": constants.TWITCH_CLIENT_SECRET,
+            "grant_type": "client_credentials",
+        }
+
+        logger.info("Grabbing twitch token.")
+        async with self.bot.http_session.post(
+            TWITCH_TOKEN_ENDPOINT, params=params
+        ) as resp:
+            data = await resp.json()
+
+        # ! we dont really handle expiry,
+        # ! but I have a feeling the bot will be restarting often enough for that not to be needed.
+        self.token = data["access_token"]
+        logger.info("Got twitch token.")
+
+    async def get_twithc_id(self, twitch_name: str) -> Optional[int]:
+        """Conntact twitch about their id and to make sure they exsist."""
         logger.info(f"getting twitch_id for {twitch_name!r}")
-        id_ = 666
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Client-Id": constants.TWITCH_CLIENT_ID,
+        }
+        params = {"login": twitch_name}
+
+        async with self.bot.http_session.get(
+            TWITCH_USER_ENDPOINT, params=params, headers=headers
+        ) as resp:
+            data = await resp.json()
+
+        data = data["data"]
+        if len(data) == 0:
+            id_ = None
+        else:
+            id_ = data[0]["id"]
+
         logger.info(f"id got -> {id_}")
 
         return id_
@@ -65,16 +104,14 @@ class Twitch(commands.Cog):
 
         return deleteInfo.deleted_count >= 1
 
-    def search_for_both(
-        self, discord_id: int, twitch_name: str
-    ) -> Optional[LinkedData]:
-        """Searches the db for documents that matches the discord_id OR the twitch_name
+    def search_for_both(self, discord_id: int, twitch_id: int) -> Optional[LinkedData]:
+        """Searches the db for documents that matches the discord_id OR the twitch_id
 
         in the code we are going to be searching for both of these, so grouping them in one operation is best.
         """
 
         return self.linked_accounts.find_one(
-            {"$or": [{"discord_id": discord_id}, {"twitch_name": twitch_name}]}
+            {"$or": [{"discord_id": discord_id}, {"twitch_id": twitch_id}]}
         )
 
     def search_for_discord(self, discord_id: int) -> Optional[LinkedData]:
@@ -98,21 +135,18 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def register_command(self, ctx: SlashContext, twitch_name: str) -> None:
+        await ctx.defer()
+
         # detect if it a url
         match = TWITCH_URL.fullmatch(twitch_name)
         if match:
             twitch_name = match.groups()[1]
 
-        # check if it is a valid name
-        if not TWITCH_USERNAME_REGEX.fullmatch(twitch_name):
-            logger.info(f"{twitch_name!r} was not a valid name.")
+        twitch_id = await self.get_twithc_id(twitch_name)
+
+        if twitch_id is None:
             await ctx.send(
-                f"Sorry `{twitch_name}` does not follow the rules for twitch nick names.\n"
-                "- Must start with a uppercase/lowercase letter or number\n"
-                "- All other symbols must be uppercase/lowercase letter, number or underscore (`_`)\n"
-                "- Be between 1 and 25 (inclusive) characters in length\n"
-                "If you think this is a mistake please open a issue: "
-                "<https://github.com/Alpha-Omega-United/discord-bot/issues/new/>",
+                f"Sorry we could not find the twitch user `{twitch_name}`",
                 hidden=constants.HIDE_MESSAGES,
             )
             return
@@ -121,7 +155,7 @@ class Twitch(commands.Cog):
         discord_id = ctx.author.id
 
         # we check db for duplicates before bothering the twitch bot
-        alreadyExsisting = self.search_for_both(discord_id, twitch_name)
+        alreadyExsisting = self.search_for_both(discord_id, twitch_id)
         updating = False
         if alreadyExsisting is not None:
             logger.info(f"duplicate found: {alreadyExsisting}")
@@ -129,7 +163,7 @@ class Twitch(commands.Cog):
             if alreadyExsisting["discord_id"] == discord_id:
                 # okay it is just he same user, let's update stuff
                 updating = True
-            else:  # We know then it is because the twitch names matched
+            else:  # We know then it is because the twitch ids matched
                 alreadyOwningUser = self.bot.get_user(alreadyExsisting["discord_id"])
                 if alreadyOwningUser is not None:
                     user_msg_part = alreadyOwningUser.mention
@@ -137,13 +171,12 @@ class Twitch(commands.Cog):
                     user_msg_part = f"`{alreadyExsisting['discord_name']}`"
 
                 await ctx.send(
-                    f"We are sorry to inform you that {user_msg_part}"
+                    f"We are sorry to inform you that {user_msg_part} "
                     f"has already registerd that twitch name (`{twitch_name}`)",
                     hidden=constants.HIDE_MESSAGES,
                 )
                 return
 
-        twitch_id = await self.get_twithc_id(twitch_name)
         data: LinkedData = {
             "discord_name": discord_name,
             "discord_id": discord_id,
@@ -156,7 +189,7 @@ class Twitch(commands.Cog):
             await ctx.send(
                 f"We have register a link between `{twitch_name}` and `{discord_name}` \n"
                 f"_**UPDATE: **_ this operation overwrote a previously registerd twitch name,"
-                + alreadyExsisting["twitch_name"],
+                + f"`{alreadyExsisting['twitch_name']}`",
                 hidden=constants.HIDE_MESSAGES,
             )
         else:
@@ -207,6 +240,7 @@ class Twitch(commands.Cog):
         if int_ctx.custom_id == cancle["custom_id"]:
             await int_ctx.edit_origin(content="CANCELD", embed=None, components=None)
         elif int_ctx.custom_id == are_you_sure["custom_id"]:
+            await ctx.defer()
             self.delete_data(data["_id"])
             await int_ctx.edit_origin(
                 content=f"Deleted data for <@{data['discord_id']}>",
@@ -221,6 +255,7 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def unregister(self, ctx: SlashContext) -> None:
+        await ctx.defer()
         data = self.search_for_discord(ctx.author.id)
 
         if data is None:
@@ -256,6 +291,7 @@ class Twitch(commands.Cog):
         },
     )
     async def delete_command(self, ctx: SlashContext, user: discord.User) -> None:
+        await ctx.defer()
         data = self.search_for_discord(user.id)
         if data is None:
             await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
