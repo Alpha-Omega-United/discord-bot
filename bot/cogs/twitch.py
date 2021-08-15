@@ -240,7 +240,6 @@ class Twitch(commands.Cog):
         if int_ctx.custom_id == cancle["custom_id"]:
             await int_ctx.edit_origin(content="CANCELD", embed=None, components=None)
         elif int_ctx.custom_id == are_you_sure["custom_id"]:
-            await ctx.defer()
             self.delete_data(data["_id"])
             await int_ctx.edit_origin(
                 content=f"Deleted data for <@{data['discord_id']}>",
