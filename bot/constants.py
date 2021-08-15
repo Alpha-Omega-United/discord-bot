@@ -35,6 +35,9 @@ TOKEN = load_required("DISCORD_TOKEN")
 DATABASE_URI = load_required("DATABASE_URI")
 DATABASE_NAME = load_required("DATABASE_NAME")
 
+TWITCH_CLIENT_ID = load_required("TWITCH_CLIENT_ID")
+TWITCH_CLIENT_SECRET = load_required("TWITCH_CLIENT_SECRET")
+
 # Testing unhides all messages.
 # WARNING: DO NOT ENABLE IN PROD
 TESTING = bool(os.getenv("TESTING", False))

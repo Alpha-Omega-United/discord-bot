@@ -4,7 +4,9 @@
 # https://discord.com/developers/applications
 DISCORD_TOKEN="Your token"
 DATABASE_URI = "Your Uri"
-DATABASE_NAME = "AoU"
+DATABASE_NAME = "Database"
+TWITCH_CLIENT_SECRET = ""
+TWITCH_CLIENT_ID = ""
 
 # Disables hidding private messages
 TESTING = 1
