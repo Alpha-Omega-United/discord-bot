@@ -135,7 +135,7 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def register_command(self, ctx: SlashContext, twitch_name: str) -> None:
-        await ctx.defer()
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
 
         # detect if it a url
         match = TWITCH_URL.fullmatch(twitch_name)
@@ -220,13 +220,13 @@ class Twitch(commands.Cog):
             label="delete",
             emoji="🗑️",
         )
-        cancle = manage_components.create_button(
-            style=manage_components.ButtonStyle.primary, label="CANCLE", emoji="⛔"
+        cancel = manage_components.create_button(
+            style=manage_components.ButtonStyle.primary, label="CANCEL", emoji="⛔"
         )
 
-        row = manage_components.create_actionrow(cancle, are_you_sure)
+        row = manage_components.create_actionrow(cancel, are_you_sure)
 
-        msg = await ctx.send(
+        await ctx.send(
             "Do you really want to delete this account link?",
             embed=embed,
             components=[row],
@@ -234,10 +234,10 @@ class Twitch(commands.Cog):
         )
 
         int_ctx: InteractionContext = await manage_components.wait_for_component(
-            self.bot, msg, row
+            self.bot, None, row
         )
 
-        if int_ctx.custom_id == cancle["custom_id"]:
+        if int_ctx.custom_id == cancel["custom_id"]:
             await int_ctx.edit_origin(content="CANCELD", embed=None, components=None)
         elif int_ctx.custom_id == are_you_sure["custom_id"]:
             self.delete_data(data["_id"])
@@ -254,7 +254,7 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def unregister(self, ctx: SlashContext) -> None:
-        await ctx.defer()
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.search_for_discord(ctx.author.id)
 
         if data is None:
@@ -290,7 +290,7 @@ class Twitch(commands.Cog):
         },
     )
     async def delete_command(self, ctx: SlashContext, user: discord.User) -> None:
-        await ctx.defer()
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.search_for_discord(user.id)
         if data is None:
             await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
