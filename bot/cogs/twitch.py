@@ -199,7 +199,7 @@ class Twitch(commands.Cog):
         if updating:
             self.update_data(alreadyExsisting["_id"], data)
             await ctx.send(
-                f"We have register a link between `{twitch_name}` and `{discord_name}` \n"
+                f"We have registerd a link between `{twitch_name}` and `{discord_name}` \n"
                 f"_**UPDATE: **_ this operation overwrote a previously registerd twitch name,"
                 + f"`{alreadyExsisting['twitch_name']}`",
                 hidden=constants.HIDE_MESSAGES,
@@ -207,7 +207,7 @@ class Twitch(commands.Cog):
         else:
             self.insert_new_link(data)
             await ctx.send(
-                f"We have register a link between `{twitch_name}` and `{discord_name}`",
+                f"We have registerd a link between `{twitch_name}` and `{discord_name}`",
                 hidden=constants.HIDE_MESSAGES,
             )
 
