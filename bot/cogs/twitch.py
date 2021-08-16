@@ -184,16 +184,15 @@ class Twitch(commands.Cog):
                     )
                     return
 
-        roles = [role.name.lower() for role in ctx.author.roles]
-
         data: LinkedData = {
             "discord_name": discord_name,
             "discord_id": discord_id,
             "twitch_name": twitch_name,
             "twitch_id": twitch_id,
             "points": 0,
-            "roles": roles,
-            "isAdmin": "admin" in roles,
+            "isAdmin": any(
+                role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
+            ),
         }
 
         if updating:
