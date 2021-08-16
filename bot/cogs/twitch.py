@@ -35,7 +35,7 @@ class LinkedData(TypedDict):
 class Twitch(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.linked_accounts = bot.database["linked_accounts"]
+        self.linked_accounts = bot.database["members"]
         self.token = None
 
     @commands.Cog.listener()
@@ -77,7 +77,7 @@ class Twitch(commands.Cog):
         if len(data) == 0:
             id_ = None
         else:
-            id_ = data[0]["id"]
+            id_ = int(data[0]["id"])
 
         logger.info(f"id got -> {id_}")
 
@@ -184,11 +184,16 @@ class Twitch(commands.Cog):
                     )
                     return
 
+        roles = [role.name.lower() for role in ctx.author.roles]
+
         data: LinkedData = {
             "discord_name": discord_name,
             "discord_id": discord_id,
             "twitch_name": twitch_name,
             "twitch_id": twitch_id,
+            "points": 0,
+            "roles": roles,
+            "isAdmin": "admin" in roles,
         }
 
         if updating:
@@ -212,7 +217,7 @@ class Twitch(commands.Cog):
         embed = discord.Embed(title=f"Data for user `{data['discord_name']}`")
 
         for name, value in data.items():
-            if name == "_id":
+            if name in {"_id", "roles"}:
                 continue
 
             embed.add_field(name=name, value=str(value), inline=False)
