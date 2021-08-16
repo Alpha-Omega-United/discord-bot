@@ -154,7 +154,6 @@ class Twitch(commands.Cog):
         discord_name = f"{ctx.author.name}#{ctx.author.discriminator}"
         discord_id = ctx.author.id
 
-        # we check db for duplicates before bothering the twitch bot
         alreadyExsisting = self.search_for_both(discord_id, twitch_id)
         updating = False
         if alreadyExsisting is not None:
@@ -164,18 +163,26 @@ class Twitch(commands.Cog):
                 # okay it is just he same user, let's update stuff
                 updating = True
             else:  # We know then it is because the twitch ids matched
-                alreadyOwningUser = self.bot.get_user(alreadyExsisting["discord_id"])
-                if alreadyOwningUser is not None:
-                    user_msg_part = alreadyOwningUser.mention
+                if (
+                    alreadyExsisting.get("discord_id", None) is None
+                    or alreadyExsisting["discord_id"] == ""
+                ):
+                    updating = True
                 else:
-                    user_msg_part = f"`{alreadyExsisting['discord_name']}`"
+                    alreadyOwningUser = self.bot.get_user(
+                        alreadyExsisting["discord_id"]
+                    )
+                    if alreadyOwningUser is not None:
+                        user_msg_part = alreadyOwningUser.mention
+                    else:
+                        user_msg_part = f"`{alreadyExsisting['discord_name']}`"
 
-                await ctx.send(
-                    f"We are sorry to inform you that {user_msg_part} "
-                    f"has already registerd that twitch name (`{twitch_name}`)",
-                    hidden=constants.HIDE_MESSAGES,
-                )
-                return
+                    await ctx.send(
+                        f"We are sorry to inform you that {user_msg_part} "
+                        f"has already registerd that twitch name (`{twitch_name}`)",
+                        hidden=constants.HIDE_MESSAGES,
+                    )
+                    return
 
         data: LinkedData = {
             "discord_name": discord_name,
