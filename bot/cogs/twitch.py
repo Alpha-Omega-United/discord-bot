@@ -184,18 +184,14 @@ class Twitch(commands.Cog):
                     )
                     return
 
-        data: LinkedData = {
-            "discord_name": discord_name,
-            "discord_id": discord_id,
-            "twitch_name": twitch_name,
-            "twitch_id": twitch_id,
-            "points": 0,
-            "isAdmin": any(
-                role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
-            ),
-        }
-
         if updating:
+            data: LinkedData = {
+                "twitch_name": twitch_name.lower(),
+                "twitch_id": twitch_id,
+                "isAdmin": any(
+                    role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
+                ),
+            }
             self.update_data(alreadyExsisting["_id"], data)
             await ctx.send(
                 f"We have registerd a link between `{twitch_name}` and `{discord_name}` \n"
@@ -204,6 +200,16 @@ class Twitch(commands.Cog):
                 hidden=constants.HIDE_MESSAGES,
             )
         else:
+            data: LinkedData = {
+                "discord_name": discord_name,
+                "discord_id": discord_id,
+                "twitch_name": twitch_name.lower(),
+                "twitch_id": twitch_id,
+                "points": 0,
+                "isAdmin": any(
+                    role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
+                ),
+            }
             self.insert_new_link(data)
             await ctx.send(
                 f"We have registerd a link between `{twitch_name}` and `{discord_name}`",
