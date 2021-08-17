@@ -26,8 +26,10 @@ import pymongo  # noqa: E402
 
 class Bot(commands.Bot):
     def __init__(self):
-        intents = discord.Intents.default()
+        intents = discord.Intents.none()
         intents.members = True
+        intents.guilds = True
+        intents.presences = True
 
         super().__init__(
             # to be able to load cogs we need to use commands.Bot,
