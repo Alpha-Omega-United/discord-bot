@@ -222,7 +222,7 @@ class Twitch(commands.Cog):
         embed = discord.Embed(title=f"Data for user `{data['discord_name']}`")
 
         for name, value in data.items():
-            if name in {"_id", "roles"}:
+            if name == "_id":
                 continue
 
             embed.add_field(name=name, value=str(value), inline=False)
@@ -231,6 +231,7 @@ class Twitch(commands.Cog):
 
     async def delete_popup(self, ctx: SlashContext, data: LinkedData) -> None:
         embed = self.format_data_for_discord(data)
+        embed.colour = discord.Color.red()
 
         are_you_sure = manage_components.create_button(
             style=manage_components.ButtonStyle.danger,
@@ -313,6 +314,40 @@ class Twitch(commands.Cog):
             await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
         else:
             await self.delete_popup(ctx, data)
+
+    @cog_ext.cog_subcommand(
+        base="admin",
+        name="view_twitch",
+        description="view somebody elses database entry.",
+        options=[
+            manage_commands.create_option(
+                name="user",
+                description="the user to view the entry of",
+                option_type=SlashCommandOptionType.USER,
+                required=True,
+            )
+        ],
+        guild_ids=[GUILD_ID],
+        base_default_permission=False,
+        base_permissions={
+            GUILD_ID: [
+                manage_commands.create_permission(
+                    id=constants.ADMIN_ROLE_ID,
+                    id_type=discord_slash.model.SlashCommandPermissionType.ROLE,
+                    permission=True,
+                )
+            ]
+        },
+    )
+    async def view_command(self, ctx: SlashContext, user: discord.User) -> None:
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
+        data = self.search_for_discord(user.id)
+        if data is None:
+            await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
+        else:
+            embed = self.format_data_for_discord(data)
+            embed.colour = discord.Color.blue()
+            await ctx.send(embed=embed, hidden=constants.HIDE_MESSAGES)
 
     @cog_ext.cog_subcommand(
         base="twitch",
