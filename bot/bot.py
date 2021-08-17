@@ -24,6 +24,9 @@ import pymongo  # noqa: E402
 
 class Bot(commands.Bot):
     def __init__(self):
+        intents = discord.Intents.default()
+        intents.members = True
+
         super().__init__(
             # to be able to load cogs we need to use commands.Bot,
             # usally commands.bot operats on normal commands.
@@ -31,7 +34,7 @@ class Bot(commands.Bot):
             # but since discord.py expects us to they require a prefix anyway
             # so just some spam is a nice work around
             command_prefix="sfsdknfsdoifmsoidoamdoadmoiadjmo",
-            intents=discord.Intents.default(),
+            intents=intents,
         )
 
         self.http_session = aiohttp.ClientSession()

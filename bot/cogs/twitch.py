@@ -188,6 +188,8 @@ class Twitch(commands.Cog):
             data: LinkedData = {
                 "twitch_name": twitch_name.lower(),
                 "twitch_id": twitch_id,
+                "discord_name": discord_name,
+                "discord_id": discord_id,
                 "isAdmin": any(
                     role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
                 ),
@@ -368,6 +370,16 @@ class Twitch(commands.Cog):
             await ctx.send(
                 f"you currently have `{points}` points.", hidden=constants.HIDE_MESSAGES
             )
+
+    @commands.Cog.listener()
+    async def on_member_update(
+        self, before: discord.Member, after: discord.Member
+    ) -> None:
+        isAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in after.roles)
+        logger.info(f"updating {after.id}['isAdmin'] = {isAdmin}")
+        self.linked_accounts.update_one(
+            {"discord_id": after.id}, {"$set": {"isAdmin": isAdmin}}
+        )
 
 
 def setup(bot: Bot) -> None:
