@@ -1,4 +1,6 @@
 import os
+import sys
+import traceback
 
 import aiohttp
 import discord
@@ -43,6 +45,8 @@ class Bot(commands.Bot):
         self.db_client = pymongo.MongoClient(constants.DATABASE_URI)
         self.database = self.db_client[constants.DATABASE_NAME]
 
+        self.log_channel: discord.TextChannel = None
+
     def load_all_extensions(self) -> None:
         for file in constants.Paths.cogs.glob("*.py"):
             dot_path = str(file).replace(os.sep, ".")[:-3]
@@ -53,8 +57,14 @@ class Bot(commands.Bot):
     def run(self) -> None:
         super().run(constants.TOKEN)
 
+    async def online_embed(self) -> None:
+        embed = discord.Embed(title="Bot online", color=discord.Color.green())
+        await self.log_channel.send(embed=embed)
+
     async def on_ready(self):
         logger.info("Bot online.")
+        self.log_channel = self.get_channel(constants.LOG_CHANNEL_ID)
+        await self.online_embed()
 
     async def close(self) -> None:
         """Close http session when bot is shuting down."""
@@ -62,6 +72,19 @@ class Bot(commands.Bot):
             await self.http_session.close()
 
         await super().close()
+
+    async def on_error(self, event) -> None:
+        (ty, er, tb) = sys.exc_info()
+        string = "".join(traceback.format_tb(tb))
+
+        logger.error(string)
+        logger.error(f"{ty.__name__}: {er}")
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            description=f"```\n{string}```",
+            title=f"{ty.__name__}: {er}",
+        )
+        await self.log_channel.send(f"<@{constants.BOT_OWNER_ID}>", embed=embed)
 
 
 def run() -> None:

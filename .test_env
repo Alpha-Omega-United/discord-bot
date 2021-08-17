@@ -4,7 +4,7 @@
 # https://discord.com/developers/applications
 DISCORD_TOKEN="Your token"
 DATABASE_URI = "Your Uri"
-DATABASE_NAME = "Database"
+DATABASE_NAME = "aou_member_list"
 TWITCH_CLIENT_SECRET = ""
 TWITCH_CLIENT_ID = ""
 
@@ -14,3 +14,4 @@ TESTING = 1
 # The ids of the test guild
 GUILD_ID=870732954907844608
 ADMIN_ROLE_ID=870732954933006387
+LOG_CHANNEL_ID=877169737845600346

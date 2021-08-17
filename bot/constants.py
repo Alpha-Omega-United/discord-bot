@@ -44,8 +44,10 @@ TESTING = bool(int(os.getenv("TESTING", False)))
 HIDE_MESSAGES = not TESTING
 
 # Default to real server
+BOT_OWNER_ID = int(os.getenv("BOT_OWNER_ID", 366331361583169537))
 GUILD_ID = int(os.getenv("GUILD_ID", 797571990176661504))
 ADMIN_ROLE_ID = int(os.getenv("ADMIN_ROLE_ID", 797573934848802817))
+LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 876494154354528316))
 
 
 class Paths(NamedTuple):
