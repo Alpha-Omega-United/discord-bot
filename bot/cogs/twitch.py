@@ -314,6 +314,26 @@ class Twitch(commands.Cog):
         else:
             await self.delete_popup(ctx, data)
 
+    @cog_ext.cog_subcommand(
+        base="twitch",
+        name="points",
+        description="check your points",
+        options=[],
+        guild_ids=[GUILD_ID],
+    )
+    async def points_command(self, ctx: SlashContext) -> None:
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
+        userData = self.search_for_discord(ctx.author.id)
+        if userData is None:
+            await ctx.send(
+                "You dont have a linked twitch account.", hidden=constants.HIDE_MESSAGES
+            )
+        else:
+            points = userData["points"]
+            await ctx.send(
+                f"you currently have `{points}` points.", hidden=constants.HIDE_MESSAGES
+            )
+
 
 def setup(bot: Bot) -> None:
     bot.add_cog(Twitch(bot))

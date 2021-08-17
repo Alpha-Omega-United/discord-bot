@@ -40,7 +40,7 @@ TWITCH_CLIENT_SECRET = load_required("TWITCH_CLIENT_SECRET")
 
 # Testing unhides all messages.
 # WARNING: DO NOT ENABLE IN PROD
-TESTING = bool(os.getenv("TESTING", False))
+TESTING = bool(int(os.getenv("TESTING", False)))
 HIDE_MESSAGES = not TESTING
 
 # Default to real server
