@@ -390,6 +390,39 @@ class Twitch(commands.Cog):
             await self.delete_popup(ctx, data)
 
     @cog_ext.cog_subcommand(
+        base="twitch",
+        name="points",
+        description="check your points",
+        options=[],
+        guild_ids=[GUILD_ID],
+    )
+    async def points_command(self, ctx: SlashContext) -> None:
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
+        userData = self.members.find_one({"discord_id": ctx.author.id})
+        if userData is None:
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description=(
+                    "We could not find an account connected to this discord account.\n"
+                    "you can register one using `/twitch register <your_twitch_name>`"
+                ),
+            )
+            await ctx.send(
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
+            )
+        else:
+            points = userData["points"]
+            points_embed = discord.Embed(
+                color=discord.Color.blue(),
+                title=f"Points for {userData['twitch_name']}",
+                description=f"You have **{points}** points",
+            )
+
+            await ctx.send(embed=points_embed, hidden=constants.HIDE_MESSAGES)
+
+    @cog_ext.cog_subcommand(
         base="admin",
         name="delete",
         description="delete somebody elses database entry.",
@@ -470,39 +503,6 @@ class Twitch(commands.Cog):
             embed = self.format_data_for_discord(data)
             embed.colour = discord.Color.blue()
             await ctx.send(embed=embed, hidden=constants.HIDE_MESSAGES)
-
-    @cog_ext.cog_subcommand(
-        base="twitch",
-        name="points",
-        description="check your points",
-        options=[],
-        guild_ids=[GUILD_ID],
-    )
-    async def points_command(self, ctx: SlashContext) -> None:
-        await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        userData = self.members.find_one({"discord_id": ctx.author.id})
-        if userData is None:
-            error_embed = discord.Embed(
-                color=discord.Color.red(),
-                title="Not found.",
-                description=(
-                    "We could not find an account connected to this discord account.\n"
-                    "you can register one using `/twitch register <your_twitch_name>`"
-                ),
-            )
-            await ctx.send(
-                embed=error_embed,
-                hidden=constants.HIDE_MESSAGES,
-            )
-        else:
-            points = userData["points"]
-            points_embed = discord.Embed(
-                color=discord.Color.blue(),
-                title=f"Points for {userData['twitch_name']}",
-                description=f"You have **{points}** points",
-            )
-
-            await ctx.send(embed=points_embed, hidden=constants.HIDE_MESSAGES)
 
     @commands.Cog.listener()
     async def on_member_update(
