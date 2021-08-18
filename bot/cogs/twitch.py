@@ -504,6 +504,102 @@ class Twitch(commands.Cog):
             embed.colour = discord.Color.blue()
             await ctx.send(embed=embed, hidden=constants.HIDE_MESSAGES)
 
+    @cog_ext.cog_subcommand(
+        base="admin",
+        name="transfere",
+        description="transfere somebodys twitch name to another discord account.",
+        options=[
+            manage_commands.create_option(
+                name="from_user",
+                description="the user to transfere from",
+                option_type=SlashCommandOptionType.USER,
+                required=True,
+            ),
+            manage_commands.create_option(
+                name="to_user",
+                description="the user to transfere to",
+                option_type=SlashCommandOptionType.USER,
+                required=True,
+            ),
+        ],
+        guild_ids=[GUILD_ID],
+        base_default_permission=False,
+        base_permissions={
+            GUILD_ID: [
+                manage_commands.create_permission(
+                    id=constants.ADMIN_ROLE_ID,
+                    id_type=discord_slash.model.SlashCommandPermissionType.ROLE,
+                    permission=True,
+                )
+            ]
+        },
+    )
+    async def transfere_command(
+        self, ctx: SlashContext, from_user: discord.User, to_user: discord.User
+    ) -> None:
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
+        data = self.members.find_one({"discord_id": from_user.id})
+        if data is None:
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description="We could not find an account connected to this discord account.",
+            )
+            await ctx.send(
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
+            )
+            return
+
+        conformation_embed = discord.Embed(
+            color=discord.Color.blue(),
+            title=f"Transfere {from_user.name} -> {to_user.name}",
+            description=(
+                f"You are about to transfere \"ownership\" of `{data['twitch_name']}` "
+                f"to {to_user.mention} (orginal owner {from_user.mention}) "
+                "points will not be affected, (admin status will be updated if needed)"
+            ),
+        )
+
+        confirm_button = manage_components.create_button(
+            style=manage_components.ButtonStyle.red, label="confirm", emoji="☑️"
+        )
+        cancel_button = manage_components.create_button(
+            style=manage_components.ButtonStyle.blue, label="cancel", emoji="⛔"
+        )
+
+        row = manage_components.create_actionrow(confirm_button, cancel_button)
+
+        await ctx.send(
+            embed=conformation_embed, components=[row], hidden=constants.HIDE_MESSAGES
+        )
+
+        button_ctx = await manage_components.wait_for_component(
+            self.bot, components=row
+        )
+
+        confirm_button["disabled"] = True
+        cancel_button["disabled"] = True
+        row = manage_components.create_actionrow(confirm_button, cancel_button)
+
+        if button_ctx.custom_id == cancel_button["custom_id"]:
+            conformation_embed.color = discord.Color.red()
+            conformation_embed.title += ": **CANCELD**"
+
+            await button_ctx.edit_origin(embed=conformation_embed, components=[row])
+
+        else:  # we assume we dont have other buttons
+            conformation_embed.color = discord.Color.green()
+            conformation_embed.title += ": **COMPLETED**"
+
+            new_data = {
+                "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
+                "discord_id": ctx.author.id,
+            }
+            self.members.update_one({"_id": data["_id"]}, {"$set": new_data})
+
+            await button_ctx.edit_origin(embed=conformation_embed, components=[row])
+
     @commands.Cog.listener()
     async def on_member_update(
         self, before: discord.Member, after: discord.Member
