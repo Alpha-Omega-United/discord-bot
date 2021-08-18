@@ -11,7 +11,6 @@ from discord_slash import (
     manage_components,
 )
 import discord_slash
-from discord_slash.context import InteractionContext
 from discord_slash.model import SlashCommandOptionType
 from loguru import logger
 from bot import constants
@@ -319,16 +318,17 @@ class Twitch(commands.Cog):
         embed = discord.Embed(title=f"Data for user `{data['discord_name']}`")
 
         for name, value in data.items():
-            if name == "_id":
+            if name in {"_id", "twitch_id", "discord_id"}:
                 continue
 
-            embed.add_field(name=name, value=str(value), inline=False)
+            embed.add_field(name=name, value=str(value))  # , inline=False)
 
         return embed
 
     async def delete_popup(self, ctx: SlashContext, data) -> None:
         embed = self.format_data_for_discord(data)
-        embed.colour = discord.Color.red()
+        embed.colour = discord.Color.blue()
+        embed.title = f"Delete `{data['discord_name']}`/`{data['twitch_name']}`"
 
         are_you_sure = manage_components.create_button(
             style=manage_components.ButtonStyle.danger,
@@ -336,31 +336,35 @@ class Twitch(commands.Cog):
             emoji="🗑️",
         )
         cancel = manage_components.create_button(
-            style=manage_components.ButtonStyle.primary, label="CANCEL", emoji="⛔"
+            style=manage_components.ButtonStyle.primary, label="cancel", emoji="⛔"
         )
 
         row = manage_components.create_actionrow(cancel, are_you_sure)
 
         await ctx.send(
-            "Do you really want to delete this account link?",
+            "Do you really want to delete this account?",
             embed=embed,
             components=[row],
             hidden=constants.HIDE_MESSAGES,
         )
 
-        int_ctx: InteractionContext = await manage_components.wait_for_component(
-            self.bot, None, row
-        )
+        int_ctx = await manage_components.wait_for_component(self.bot, components=row)
+
+        are_you_sure["disabled"] = True
+        cancel["disabled"] = True
+        row = manage_components.create_actionrow(are_you_sure, cancel)
 
         if int_ctx.custom_id == cancel["custom_id"]:
-            await int_ctx.edit_origin(content="CANCELD", embed=None, components=None)
+            embed.color = discord.Color.green()
+            embed.title += ": **CANCELD**"
+
+            await int_ctx.edit_origin(embed=embed, components=[row])
         elif int_ctx.custom_id == are_you_sure["custom_id"]:
+            embed.color = discord.Color.red()
+            embed.title += ": **DELETED**"
+
             self.members.delete_one({"_id": data["_id"]})
-            await int_ctx.edit_origin(
-                content=f"Deleted data for <@{data['discord_id']}>",
-                embed=None,
-                components=None,
-            )
+            await int_ctx.edit_origin(embed=embed, components=[row])
 
     @cog_ext.cog_subcommand(
         base="twitch",
@@ -373,8 +377,13 @@ class Twitch(commands.Cog):
         data = self.members.find_one({"discord_id": ctx.author.id})
 
         if data is None:
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description="We could not find an account connected to this discord account.",
+            )
             await ctx.send(
-                "Sorry we could not find you in our database",
+                embed=error_embed,
                 hidden=constants.HIDE_MESSAGES,
             )
         else:
@@ -382,7 +391,7 @@ class Twitch(commands.Cog):
 
     @cog_ext.cog_subcommand(
         base="admin",
-        name="delete_twitch",
+        name="delete",
         description="delete somebody elses database entry.",
         options=[
             manage_commands.create_option(
@@ -408,13 +417,21 @@ class Twitch(commands.Cog):
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": user.id})
         if data is None:
-            await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description="We could not find an account connected to this discord account.",
+            )
+            await ctx.send(
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
+            )
         else:
             await self.delete_popup(ctx, data)
 
     @cog_ext.cog_subcommand(
         base="admin",
-        name="view_twitch",
+        name="view",
         description="view somebody elses database entry.",
         options=[
             manage_commands.create_option(
@@ -440,7 +457,15 @@ class Twitch(commands.Cog):
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": user.id})
         if data is None:
-            await ctx.send("this user is not registerd", hidden=constants.HIDE_MESSAGES)
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description="We could not find an account connected to this discord account.",
+            )
+            await ctx.send(
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
+            )
         else:
             embed = self.format_data_for_discord(data)
             embed.colour = discord.Color.blue()
@@ -457,20 +482,33 @@ class Twitch(commands.Cog):
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         userData = self.members.find_one({"discord_id": ctx.author.id})
         if userData is None:
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description=(
+                    "We could not find an account connected to this discord account.\n"
+                    "you can register one using `/twitch register <your_twitch_name>`"
+                ),
+            )
             await ctx.send(
-                "You dont have a linked twitch account.", hidden=constants.HIDE_MESSAGES
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
             )
         else:
             points = userData["points"]
-            await ctx.send(
-                f"you currently have `{points}` points.", hidden=constants.HIDE_MESSAGES
+            points_embed = discord.Embed(
+                color=discord.Color.blue(),
+                title=f"Points for {userData['twitch_name']}",
+                description=f"You have **{points}** points",
             )
+
+            await ctx.send(embed=points_embed, hidden=constants.HIDE_MESSAGES)
 
     @commands.Cog.listener()
     async def on_member_update(
         self, before: discord.Member, after: discord.Member
     ) -> None:
-        wasAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in after.roles)
+        wasAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in before.roles)
         isAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in after.roles)
 
         if wasAdmin != isAdmin:
