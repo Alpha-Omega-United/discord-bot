@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import traceback
 
 import aiohttp
@@ -68,6 +69,8 @@ class Bot(commands.Bot):
         self.log_channel = self.get_channel(constants.LOG_CHANNEL_ID)
         await self.online_embed()
 
+        self.start_timestamp = time.time()
+
     async def close(self) -> None:
         """Close http session when bot is shuting down."""
         if self.http_session:
@@ -77,16 +80,11 @@ class Bot(commands.Bot):
 
     async def on_error(self, event) -> None:
         (ty, er, tb) = sys.exc_info()
-        string = "".join(traceback.format_tb(tb))
+        string = f"{ty.__name__}: {er}\n" + "".join(traceback.format_tb(tb))
 
         logger.error(string)
-        logger.error(f"{ty.__name__}: {er}")
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            description=f"```\n{string}```",
-            title=f"{ty.__name__}: {er}",
-        )
-        await self.log_channel.send(f"<@{constants.BOT_OWNER_ID}>", embed=embed)
+        string = string[:1900]
+        await self.log_channel.send(f"<@{constants.BOT_OWNER_ID}>\n```\n{string}```")
 
 
 def run() -> None:

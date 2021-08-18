@@ -1,5 +1,4 @@
 import abc
-import asyncio
 from typing import Any, Awaitable, Callable, Dict, List
 
 import discord
@@ -63,14 +62,10 @@ class Paginator(abc.ABC):
             button_ctx = await manage_components.wait_for_component(
                 client, components=[self.previous_button, self.next_button]
             )
-            if self.close_timer_task is None:
-                self.close_timer_task = asyncio.create_task(
-                    self.close_timer(button_ctx.edit_origin, timeout)
-                )
 
             if button_ctx.author != ctx.author:
                 await button_ctx.send(
-                    "Sorry only the original command creator can use this button",
+                    "Sorry only the original command user can use this button",
                     hidden=True,
                 )
             elif button_ctx.custom_id == self.next_button["custom_id"]:
@@ -81,20 +76,6 @@ class Paginator(abc.ABC):
                 await self.switch_to_page_x(
                     button_ctx.edit_origin, self.current_page - 1
                 )
-
-    async def close(self, edit_cmd: Callable[..., Awaitable[Any]]) -> None:
-        self.next_button["disabled"] = True
-        self.previous_button["disabled"] = True
-        row = manage_components.create_actionrow(self.previous_button, self.next_button)
-
-        await edit_cmd(compnents=[row])
-        self.close_timer_task.cancel()
-
-    async def close_timer(
-        self, edit_cmd: Callable[..., Awaitable[Any]], timeout: int
-    ) -> None:
-        await asyncio.sleep(timeout)
-        await self.close(edit_cmd)
 
 
 class EmbedPaginator(Paginator):
