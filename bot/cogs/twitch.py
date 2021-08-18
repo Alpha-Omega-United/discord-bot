@@ -1,4 +1,5 @@
 import re
+import asyncio
 
 from typing import Any, Dict, Optional
 import discord
@@ -17,6 +18,7 @@ from bot import constants
 
 from bot.constants import GUILD_ID
 from bot.bot import Bot
+from bot.paginator import EmbedPaginator
 
 # matches:
 # https://twitch.tv/username
@@ -483,16 +485,9 @@ class Twitch(commands.Cog):
 
     @cog_ext.cog_subcommand(
         base="admin",
-        name="view",
-        description="view somebody elses database entry.",
-        options=[
-            manage_commands.create_option(
-                name="user",
-                description="the user to view the entry of",
-                option_type=SlashCommandOptionType.USER,
-                required=True,
-            )
-        ],
+        name="view_all",
+        description="view all database entries.",
+        options=[],
         guild_ids=[GUILD_ID],
         base_default_permission=False,
         base_permissions={
@@ -505,23 +500,13 @@ class Twitch(commands.Cog):
             ]
         },
     )
-    async def view_command(self, ctx: SlashContext, user: discord.User) -> None:
+    async def view_all_command(self, ctx: SlashContext) -> None:
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        data = self.members.find_one({"discord_id": user.id})
-        if data is None:
-            error_embed = discord.Embed(
-                color=discord.Color.red(),
-                title="Not found.",
-                description="We could not find an account connected to this discord account.",
-            )
-            await ctx.send(
-                embed=error_embed,
-                hidden=constants.HIDE_MESSAGES,
-            )
-        else:
-            embed = self.format_data_for_discord(data)
-            embed.colour = discord.Color.blue()
-            await ctx.send(embed=embed, hidden=constants.HIDE_MESSAGES)
+        embeds = [
+            self.format_data_for_discord(account) for account in self.members.find()
+        ]
+        paginator = EmbedPaginator(embeds, "User: ")
+        asyncio.create_task(paginator.start(self.bot, ctx, hidden=False))
 
     @cog_ext.cog_subcommand(
         base="admin",
