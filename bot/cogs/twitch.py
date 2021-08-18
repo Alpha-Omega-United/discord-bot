@@ -35,6 +35,23 @@ class Twitch(commands.Cog):
         self.members = bot.database["members"]
         self.token = None
 
+    async def sync_admins(self) -> None:
+        logger.info("syncing admins")
+        admins = [
+            member.id
+            for member in self.bot.get_guild(GUILD_ID).members
+            if any(role.id == constants.ADMIN_ROLE_ID for role in member.roles)
+        ]
+
+        self.members.update_many(
+            {"discord_id": {"$in": admins}}, {"$set": {"isAdmin": True}}
+        )
+        self.members.update_many(
+            {"discord_id": {"$not": {"$in": admins}}}, {"$set": {"isAdmin": False}}
+        )
+
+        logger.info("synced admins.")
+
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Get twitch token."""
@@ -54,6 +71,8 @@ class Twitch(commands.Cog):
         # ! but I have a feeling the bot will be restarting often enough for that not to be needed.
         self.token = data["access_token"]
         logger.info("Got twitch token.")
+
+        await self.sync_admins()
 
     async def get_twithc_data(self, twitch_name: str) -> Optional[Dict[str, Any]]:
         """Conntact twitch about their id and to make sure they exsist."""
