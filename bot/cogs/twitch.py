@@ -40,7 +40,7 @@ class Twitch(commands.Cog):
     async def sync_admins(self) -> None:
         logger.info("syncing admins")
         admins = [
-            member.id
+            str(member.id)
             for member in self.bot.get_guild(GUILD_ID).members
             if any(role.id == constants.ADMIN_ROLE_ID for role in member.roles)
         ]
@@ -158,10 +158,12 @@ class Twitch(commands.Cog):
             await ctx.send(embed=error_embed, hidden=constants.HIDE_MESSAGES)
             return
 
-        duplicateDiscordDocuemnt = self.members.find_one({"discord_id": ctx.author.id})
+        duplicateDiscordDocuemnt = self.members.find_one(
+            {"discord_id": str(ctx.author.id)}
+        )
         if duplicateDiscordDocuemnt is None:
             await self.register_new(ctx, twitch_data)
-        elif duplicateDiscordDocuemnt["discord_id"] == ctx.author.id:
+        else:
             await self.update_twitch(ctx, duplicateDiscordDocuemnt, twitch_data)
 
     async def register_new(
@@ -217,7 +219,7 @@ class Twitch(commands.Cog):
                 "twitch_name": twitch_data["login"].lower(),
                 "twitch_id": twitch_data["id"],
                 "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
-                "discord_id": ctx.author.id,
+                "discord_id": str(ctx.author.id),
                 "points": 0,
                 "isAdmin": any(
                     role.id == constants.ADMIN_ROLE_ID for role in ctx.author.roles
@@ -329,7 +331,7 @@ class Twitch(commands.Cog):
 
             data = {
                 "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
-                "discord_id": ctx.author.id,
+                "discord_id": str(ctx.author.id),
             }
             self.members.update_one({"_id": duplicate["_id"]}, {"$set": data})
 
@@ -395,7 +397,7 @@ class Twitch(commands.Cog):
     )
     async def unregister(self, ctx: SlashContext) -> None:
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        data = self.members.find_one({"discord_id": ctx.author.id})
+        data = self.members.find_one({"discord_id": str(ctx.author.id)})
 
         if data is None:
             error_embed = discord.Embed(
@@ -419,7 +421,7 @@ class Twitch(commands.Cog):
     )
     async def points_command(self, ctx: SlashContext) -> None:
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        userData = self.members.find_one({"discord_id": ctx.author.id})
+        userData = self.members.find_one({"discord_id": str(ctx.author.id)})
         if userData is None:
             error_embed = discord.Embed(
                 color=discord.Color.red(),
@@ -469,7 +471,7 @@ class Twitch(commands.Cog):
     )
     async def delete_command(self, ctx: SlashContext, user: discord.User) -> None:
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        data = self.members.find_one({"discord_id": user.id})
+        data = self.members.find_one({"discord_id": str(user.id)})
         if data is None:
             error_embed = discord.Embed(
                 color=discord.Color.red(),
@@ -510,18 +512,18 @@ class Twitch(commands.Cog):
 
     @cog_ext.cog_subcommand(
         base="admin",
-        name="transfere",
-        description="transfere somebodys twitch name to another discord account.",
+        name="transfer",
+        description="transfer somebodys twitch name to another discord account.",
         options=[
             manage_commands.create_option(
                 name="from_user",
-                description="the user to transfere from",
+                description="the user to transfer from",
                 option_type=SlashCommandOptionType.USER,
                 required=True,
             ),
             manage_commands.create_option(
                 name="to_user",
-                description="the user to transfere to",
+                description="the user to transfer to",
                 option_type=SlashCommandOptionType.USER,
                 required=True,
             ),
@@ -538,11 +540,11 @@ class Twitch(commands.Cog):
             ]
         },
     )
-    async def transfere_command(
+    async def transfer_command(
         self, ctx: SlashContext, from_user: discord.User, to_user: discord.User
     ) -> None:
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        data = self.members.find_one({"discord_id": from_user.id})
+        data = self.members.find_one({"discord_id": str(from_user.id)})
         if data is None:
             error_embed = discord.Embed(
                 color=discord.Color.red(),
@@ -557,9 +559,9 @@ class Twitch(commands.Cog):
 
         conformation_embed = discord.Embed(
             color=discord.Color.blue(),
-            title=f"Transfere {from_user.name} -> {to_user.name}",
+            title=f"Transfer {from_user.name} -> {to_user.name}",
             description=(
-                f"You are about to transfere \"ownership\" of `{data['twitch_name']}` "
+                f"You are about to transfer \"ownership\" of `{data['twitch_name']}` "
                 f"to {to_user.mention} (orginal owner {from_user.mention}) "
                 "points will not be affected, (admin status will be updated if needed)"
             ),
@@ -598,7 +600,7 @@ class Twitch(commands.Cog):
 
             new_data = {
                 "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
-                "discord_id": ctx.author.id,
+                "discord_id": str(ctx.author.id),
             }
             self.members.update_one({"_id": data["_id"]}, {"$set": new_data})
 
@@ -614,7 +616,7 @@ class Twitch(commands.Cog):
         if wasAdmin != isAdmin:
             logger.info(f"updating {after.id}['isAdmin'] = {isAdmin}")
             self.members.update_one(
-                {"discord_id": after.id}, {"$set": {"isAdmin": isAdmin}}
+                {"discord_id": str(after.id)}, {"$set": {"isAdmin": isAdmin}}
             )
 
 

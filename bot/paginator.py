@@ -99,7 +99,6 @@ class TextPaginator(Paginator):
         self, pages: List[str], first_line_prefix: str = "**Page: ** ", **kwargs
     ):
         super().__init__(num_pages=len(pages), **kwargs)
-        super().__init__(**kwargs)
 
         self.pages = pages
         self.first_line_prefix = first_line_prefix
