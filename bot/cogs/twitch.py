@@ -619,6 +619,15 @@ class Twitch(commands.Cog):
                 {"discord_id": str(after.id)}, {"$set": {"isAdmin": isAdmin}}
             )
 
+        b_nick = f"{before.name}#{before.discriminator}"
+        a_nick = f"{after.name}#{after.discriminator}"
+
+        if b_nick != a_nick:
+            logger.info(f"updating {after.id}['discord_name'] = {a_nick}")
+            self.members.update_one(
+                {"discord_id": str(after.id)}, {"$set": {"discord_name": a_nick}}
+            )
+
 
 def setup(bot: Bot) -> None:
     bot.add_cog(Twitch(bot))
