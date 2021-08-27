@@ -488,6 +488,47 @@ class Twitch(commands.Cog):
 
     @cog_ext.cog_subcommand(
         base="admin",
+        name="view",
+        description="view somebody elses database entry.",
+        options=[
+            manage_commands.create_option(
+                name="user",
+                description="the user to view the entry of",
+                option_type=SlashCommandOptionType.USER,
+                required=True,
+            )
+        ],
+        guild_ids=[GUILD_ID],
+        base_default_permission=False,
+        base_permissions={
+            GUILD_ID: [
+                manage_commands.create_permission(
+                    id=constants.ADMIN_ROLE_ID,
+                    id_type=discord_slash.model.SlashCommandPermissionType.ROLE,
+                    permission=True,
+                )
+            ]
+        },
+    )
+    async def view_command(self, ctx: SlashContext, user: discord.User) -> None:
+        await ctx.defer(hidden=constants.HIDE_MESSAGES)
+        data = self.members.find_one({"discord_id": str(user.id)})
+        if data is None:
+            error_embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Not found.",
+                description="We could not find an account connected to this discord account.",
+            )
+            await ctx.send(
+                embed=error_embed,
+                hidden=constants.HIDE_MESSAGES,
+            )
+        else:
+            embed = self.format_data_for_discord(data)
+            await ctx.send(embed=embed, hidden=constants.HIDE_MESSAGES)
+
+    @cog_ext.cog_subcommand(
+        base="admin",
         name="view_all",
         description="view all database entries.",
         options=[],
