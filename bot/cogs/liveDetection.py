@@ -12,7 +12,8 @@ class LiveCog(commands.Cog):
         self.bot = bot
         self.members = self.bot.database["members"]
 
-    def user_is_streaming(self, user: discord.Member) -> Optional[discord.Streaming]:
+    @staticmethod
+    def user_is_streaming(user: discord.Member) -> Optional[discord.Streaming]:
         for activity in user.activities:
             if activity.type == discord.ActivityType.streaming:
                 return activity
@@ -32,12 +33,19 @@ class LiveCog(commands.Cog):
             if streamingAct is None:
                 self.members.update_one(
                     {"discord_id": str(user.id)},
-                    {"$set": {"isLive": False, "liveUrl": None}},
+                    {"$set": {"stream": None}},
                 )
             else:
                 self.members.update_one(
                     {"discord_id": str(user.id)},
-                    {"$set": {"isLive": True, "liveUrl": streamingAct.url}},
+                    {
+                        "$set": {
+                            "stream": {
+                                "live_where": streamingAct.platform.lower(),
+                                "live_url": streamingAct.url,
+                            }
+                        }
+                    },
                 )
 
         logger.info("synced live.")
@@ -55,12 +63,19 @@ class LiveCog(commands.Cog):
             if streamingAct is None:
                 self.members.update_one(
                     {"discord_id": str(after.id)},
-                    {"$set": {"isLive": False, "liveUrl": None}},
+                    {"$set": {"stream": None}},
                 )
             else:
                 self.members.update_one(
                     {"discord_id": str(after.id)},
-                    {"$set": {"isLive": True, "liveUrl": streamingAct.url}},
+                    {
+                        "$set": {
+                            "stream": {
+                                "live_where": streamingAct.platform.lower(),
+                                "live_url": streamingAct.url,
+                            }
+                        }
+                    },
                 )
 
 
