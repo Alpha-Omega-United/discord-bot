@@ -5,6 +5,8 @@ import discord
 import discord_slash
 from discord_slash import manage_components
 
+from loguru import logger
+
 MESSAGE_KWARGS = Dict[str, Any]
 
 
@@ -46,6 +48,8 @@ class Paginator(abc.ABC):
         self.next_button["disabled"] = number == self.num_pages
         self.previous_button["disabled"] = number == 1
         row = manage_components.create_actionrow(self.previous_button, self.next_button)
+
+        logger.debug(msg_data["embed"].to_dict())
 
         await send_edit_cmd(components=[row], **msg_data, **extra_msg_args)
 

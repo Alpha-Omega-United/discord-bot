@@ -27,9 +27,6 @@ class LiveCog(commands.Cog):
         for user in self.bot.get_guild(constants.GUILD_ID).members:
             streamingAct = self.user_is_streaming(user)
 
-            logger.info(
-                f"updating live status for {user} to {streamingAct is not None}"
-            )
             if streamingAct is None:
                 self.members.update_one(
                     {"discord_id": str(user.id)},

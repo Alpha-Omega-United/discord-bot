@@ -341,10 +341,11 @@ class Twitch(commands.Cog):
         embed = discord.Embed(title=f"Data for user `{data['discord_name']}`")
 
         for name, value in data.items():
-            if name in {"_id", "twitch_id", "discord_id"}:
+            if name in {"_id", "twitch_id", "discord_id", "stream"}:
                 continue
 
-            embed.add_field(name=name, value=str(value))  # , inline=False)
+            if value is not None and value != "":
+                embed.add_field(name=name, value=str(value))  # , inline=False)
 
         return embed
 
