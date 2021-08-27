@@ -49,7 +49,14 @@ class Twitch(commands.Cog):
             {"discord_id": {"$in": admins}}, {"$set": {"isAdmin": True}}
         )
         self.members.update_many(
-            {"discord_id": {"$not": {"$in": admins}}}, {"$set": {"isAdmin": False}}
+            {
+                "$and": [
+                    {"discord_id": {"$ne": None}},
+                    {"discord_id": {"$exists": True}},
+                    {"discord_id": {"$nin": admins}},
+                ]
+            },
+            {"$set": {"isAdmin": False}},
         )
 
         logger.info("synced admins.")
