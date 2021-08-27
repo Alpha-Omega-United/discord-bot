@@ -208,7 +208,6 @@ class Twitch(commands.Cog):
             conformation_embed.color = discord.Color.red()
             conformation_embed.title += ": **CANCELD**"
 
-            logger.info("canceld by user.")
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
         else:  # we assume we dont have other buttons
@@ -226,6 +225,7 @@ class Twitch(commands.Cog):
                 ),
             }
             self.members.insert_one(data)
+            logger.info(f"registerd {ctx.author.name}")
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
@@ -281,6 +281,8 @@ class Twitch(commands.Cog):
                 "twitch_id": twitch_data["id"],
                 "points": 0,
             }
+
+            logger.info(f"updated {ctx.author.name}")
             self.members.update_one({"_id": duplicate["_id"]}, {"$set": data})
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
@@ -334,6 +336,8 @@ class Twitch(commands.Cog):
                 "discord_id": str(ctx.author.id),
             }
             self.members.update_one({"_id": duplicate["_id"]}, {"$set": data})
+
+            logger.info(f"linked {ctx.author.name}")
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
