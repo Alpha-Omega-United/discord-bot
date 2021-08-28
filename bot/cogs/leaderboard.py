@@ -2,7 +2,6 @@ import asyncio
 import time
 import discord
 from discord.ext import commands
-from loguru import logger
 import pymongo
 
 from bot.bot import Bot
@@ -37,8 +36,6 @@ class LeaderboardCog(commands.Cog):
             await asyncio.sleep(SLEEP_TIME)
 
     async def update_leaderboard(self) -> None:
-        logger.info("updating leaderboard")
-
         current_time = time.time()
         topUsers = (
             self.members.find()

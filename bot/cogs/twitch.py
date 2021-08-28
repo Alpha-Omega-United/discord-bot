@@ -121,7 +121,7 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def register_command(self, ctx: SlashContext, twitch_name: str) -> None:
-        logger.info(f"registering {twitch_name} for {ctx.author}")
+        logger.info(f"registering {twitch_name} <-> {ctx.author}")
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
 
         # detect if it a url
@@ -216,6 +216,7 @@ class Twitch(commands.Cog):
             conformation_embed.title += ": **CANCELD**"
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
+            logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
@@ -278,6 +279,7 @@ class Twitch(commands.Cog):
             conformation_embed.title += ": **CANCELD**"
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
+            logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
@@ -333,6 +335,7 @@ class Twitch(commands.Cog):
             conformation_embed.title += ": **CANCELD**"
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
+            logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
@@ -394,12 +397,16 @@ class Twitch(commands.Cog):
             embed.title += ": **CANCELD**"
 
             await int_ctx.edit_origin(embed=embed, components=[row])
+            logger.info(f"canceld {ctx.author.name}")
+
         elif int_ctx.custom_id == are_you_sure["custom_id"]:
             embed.color = discord.Color.red()
             embed.title += ": **DELETED**"
 
             self.members.delete_one({"_id": data["_id"]})
             await int_ctx.edit_origin(embed=embed, components=[row])
+
+            logger.info(f"deleted {ctx.author.name}")
 
     @cog_ext.cog_subcommand(
         base="twitch",
@@ -422,6 +429,7 @@ class Twitch(commands.Cog):
                 hidden=constants.HIDE_MESSAGES,
             )
         else:
+            logger.info(f"unregister popup {ctx.author.name}")
             await self.delete_popup(ctx, data)
 
     @cog_ext.cog_subcommand(
