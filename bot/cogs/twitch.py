@@ -96,6 +96,10 @@ class Twitch(commands.Cog):
         ) as resp:
             data = await resp.json()
 
+        if "error" in data:
+            logger.error(data["message"])
+            return None
+
         data = data["data"]
         if len(data) == 0:
             user_data = None
