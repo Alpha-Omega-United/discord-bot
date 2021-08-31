@@ -191,7 +191,7 @@ class Twitch(commands.Cog):
         )
         conformation_embed.set_thumbnail(url=twitch_data["profile_image_url"])
         conformation_embed.set_footer(
-            text="You can change this latter using /twitch register"
+            text="You can change this later using /twitch register"
         )
 
         confirm_button = manage_components.create_button(
