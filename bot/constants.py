@@ -1,9 +1,10 @@
+"""Constants and configs."""
+
+
 import os
 import pathlib
-from typing import NamedTuple
 
 import dotenv
-
 
 dotenv.load_dotenv()
 
@@ -24,6 +25,19 @@ DNS_SERVERS = [
 
 
 def load_required(key: str) -> str:
+    """
+    Load value from env, fails if not found.
+
+    Args:
+        key: key to lookup
+
+    Returns:
+        the found value
+
+    Raises:
+        EnvironmentError: key not found
+
+    """
     value = os.getenv(key, None)
     if value is None:
         raise EnvironmentError(f"Missing envioroment varible {key!r}")
@@ -54,7 +68,9 @@ LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 876494154354528316))
 LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID", 880917372658155531))
 
 
-class Paths(NamedTuple):
+class Paths:
+    """Folder paths."""
+
     src = pathlib.Path("bot")
     cogs = src / "cogs"
     resources = src / "resources"

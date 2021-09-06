@@ -27,3 +27,11 @@ repos:
         entry: poetry run python -m flake8
         require_serial: true
         pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        description: Lints this repository using mypy.
+        language: system
+        entry: poetry run python -m mypy .
+        require_serial: true
+        pass_filenames: false

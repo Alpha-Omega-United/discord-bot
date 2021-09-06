@@ -1,24 +1,32 @@
-import re
+"""Main cog for interacting with the db."""
+
 import asyncio
+import re
+from typing import Optional, cast
 
-from typing import Any, Dict, Optional
 import discord
-
+import discord_slash
 from discord.ext import commands
 from discord_slash import (
-    cog_ext,
     SlashContext,
+    cog_ext,
     manage_commands,
     manage_components,
 )
-import discord_slash
 from discord_slash.model import SlashCommandOptionType
 from loguru import logger
-from bot import constants
 
-from bot.constants import GUILD_ID
+from bot import constants
 from bot.bot import Bot
+from bot.constants import GUILD_ID
 from bot.paginator import EmbedPaginator
+from bot.types import (
+    MemberData,
+    TwitchData,
+    TwitchUserResponse,
+    TwitchUserResponseCorrect,
+    TwitchUserResponseError,
+)
 
 # matches:
 # https://twitch.tv/username
@@ -27,21 +35,40 @@ from bot.paginator import EmbedPaginator
 # (if this does not match we assume it is just a normal username)
 TWITCH_URL = re.compile(r"^(https?:\/\/)?twitch\.tv\/(.+)$")
 
-TWITCH_TOKEN_ENDPOINT = "https://id.twitch.tv/oauth2/token"
+TWITCH_TOKEN_ENDPOINT = "https://id.twitch.tv/oauth2/token"  # noqa: S105
 TWITCH_USER_ENDPOINT = "https://api.twitch.tv/helix/users"
 
 
 class Twitch(commands.Cog):
+    """Cog taking care of accounts in db."""
+
     def __init__(self, bot: Bot):
+        """
+        Create an instance.
+
+        Args:
+            bot: the bot this cog is a part of
+        """
         self.bot = bot
         self.members = bot.database["members"]
-        self.token = None
+        self.token: str
 
     async def sync_admins(self) -> None:
+        """
+        Make sure all admins are correct on bot restart.
+
+        Raises:
+            ValueError: if guild is not found
+        """
         logger.info("syncing admins")
+
+        guild = self.bot.get_guild(GUILD_ID)
+        if guild is None:
+            raise ValueError("guild not found")
+
         admins = [
             str(member.id)
-            for member in self.bot.get_guild(GUILD_ID).members
+            for member in guild.members
             if any(role.id == constants.ADMIN_ROLE_ID for role in member.roles)
         ]
 
@@ -63,7 +90,7 @@ class Twitch(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """Get twitch token."""
+        """Get twitch token and sync admins."""
         params = {
             "client_id": constants.TWITCH_CLIENT_ID,
             "client_secret": constants.TWITCH_CLIENT_SECRET,
@@ -83,8 +110,16 @@ class Twitch(commands.Cog):
 
         await self.sync_admins()
 
-    async def get_twithc_data(self, twitch_name: str) -> Optional[Dict[str, Any]]:
-        """Conntact twitch about their id and to make sure they exsist."""
+    async def get_twithc_data(self, twitch_name: str) -> Optional[TwitchData]:
+        """
+        Get data from twitch based on login name.
+
+        Args:
+            twitch_name: name to lookup
+
+        Returns:
+            the data from twitch
+        """
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Client-Id": constants.TWITCH_CLIENT_ID,
@@ -94,13 +129,15 @@ class Twitch(commands.Cog):
         async with self.bot.http_session.get(
             TWITCH_USER_ENDPOINT, params=params, headers=headers
         ) as resp:
-            data = await resp.json()
+            raw_data: TwitchUserResponse = await resp.json()
 
-        if "error" in data:
-            logger.error(data["message"])
+        if "error" in raw_data:
+            raw_data = cast(TwitchUserResponseError, raw_data)
+            logger.error(raw_data["message"])
             return None
 
-        data = data["data"]
+        raw_data = cast(TwitchUserResponseCorrect, raw_data)
+        data = raw_data["data"]
         if len(data) == 0:
             user_data = None
         else:
@@ -125,6 +162,15 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def register_command(self, ctx: SlashContext, twitch_name: str) -> None:
+        """
+        Register a twitch user name.
+
+        Will branch off to other relevant function depending on context.
+
+        Args:
+            ctx: the interaction context
+            twitch_name: user given twitch login name (can be url)
+        """
         logger.info(f"registering {twitch_name} <-> {ctx.author}")
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
 
@@ -145,16 +191,16 @@ class Twitch(commands.Cog):
             await ctx.send(embed=error_embed, hidden=constants.HIDE_MESSAGES)
             return
 
-        duplicateTwitchDocument = self.members.find_one(
+        duplicate_twitch_document: Optional[MemberData] = self.members.find_one(
             {"twitch_id": twitch_data["id"]},
         )
-        if duplicateTwitchDocument is not None:
-            if duplicateTwitchDocument.get("discord_id", None) is None:
-                await self.link_twitch(ctx, duplicateTwitchDocument, twitch_data)
+        if duplicate_twitch_document is not None:
+            if duplicate_twitch_document.get("discord_id", None) is None:
+                await self.link_twitch(ctx, duplicate_twitch_document, twitch_data)
                 return
 
             logger.info("already owned twitch account.")
-            mention = f"<@{duplicateTwitchDocument['discord_id']}>"
+            mention = f"<@{duplicate_twitch_document['discord_id']}>"
 
             error_embed = discord.Embed(
                 color=discord.Color.red(),
@@ -169,17 +215,22 @@ class Twitch(commands.Cog):
             await ctx.send(embed=error_embed, hidden=constants.HIDE_MESSAGES)
             return
 
-        duplicateDiscordDocuemnt = self.members.find_one(
+        duplicate_discord_docuemnt: Optional[MemberData] = self.members.find_one(
             {"discord_id": str(ctx.author.id)}
         )
-        if duplicateDiscordDocuemnt is None:
+        if duplicate_discord_docuemnt is None:
             await self.register_new(ctx, twitch_data)
         else:
-            await self.update_twitch(ctx, duplicateDiscordDocuemnt, twitch_data)
+            await self.update_twitch(ctx, duplicate_discord_docuemnt, twitch_data)
 
-    async def register_new(
-        self, ctx: SlashContext, twitch_data: Dict[str, Any]
-    ) -> None:
+    async def register_new(self, ctx: SlashContext, twitch_data: TwitchData) -> None:
+        """
+        Create a new account.
+
+        Args:
+            ctx: the interaction context
+            twitch_data: twitch account data
+        """
         conformation_embed = discord.Embed(
             color=discord.Color.blue(),
             title=f"Register {twitch_data['login']}",
@@ -217,14 +268,14 @@ class Twitch(commands.Cog):
 
         if button_ctx.custom_id == cancel_button["custom_id"]:
             conformation_embed.color = discord.Color.red()
-            conformation_embed.title += ": **CANCELD**"
+            conformation_embed.title += ": **CANCELD**"  # type: ignore
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
             logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
-            conformation_embed.title += ": **COMPLETED**"
+            conformation_embed.title += ": **COMPLETED**"  # type: ignore
 
             data = {
                 "twitch_name": twitch_data["login"].lower(),
@@ -241,7 +292,17 @@ class Twitch(commands.Cog):
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
-    async def update_twitch(self, ctx: SlashContext, duplicate, twitch_data) -> None:
+    async def update_twitch(
+        self, ctx: SlashContext, duplicate: MemberData, twitch_data: TwitchData
+    ) -> None:
+        """
+        Overwrite twitch username.
+
+        Args:
+            ctx: the interaction context
+            duplicate: the already exsisting db entry
+            twitch_data: twitch account data
+        """
         conformation_embed = discord.Embed(
             color=discord.Color.blue(),
             title=f"Overwrite {duplicate['twitch_name']} with {twitch_data['login']}",
@@ -280,14 +341,14 @@ class Twitch(commands.Cog):
 
         if button_ctx.custom_id == cancel_button["custom_id"]:
             conformation_embed.color = discord.Color.red()
-            conformation_embed.title += ": **CANCELD**"
+            conformation_embed.title += ": **CANCELD**"  # type: ignore
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
             logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
-            conformation_embed.title += ": **COMPLETED**"
+            conformation_embed.title += ": **COMPLETED**"  # type: ignore
 
             data = {
                 "twitch_name": twitch_data["login"].lower(),
@@ -300,7 +361,17 @@ class Twitch(commands.Cog):
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
-    async def link_twitch(self, ctx: SlashContext, duplicate, twitch_data) -> None:
+    async def link_twitch(
+        self, ctx: SlashContext, duplicate: MemberData, twitch_data: TwitchData
+    ) -> None:
+        """
+        Link a discord account to a already existing twitch db entry.
+
+        Args:
+            ctx: the interaction context
+            duplicate: the already exsisting db entry
+            twitch_data: twitch account data
+        """
         conformation_embed = discord.Embed(
             color=discord.Color.blue(),
             title=f"Register {twitch_data['login']}",
@@ -336,14 +407,14 @@ class Twitch(commands.Cog):
 
         if button_ctx.custom_id == cancel_button["custom_id"]:
             conformation_embed.color = discord.Color.red()
-            conformation_embed.title += ": **CANCELD**"
+            conformation_embed.title += ": **CANCELD**"  # type: ignore
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
             logger.info(f"canceld {ctx.author.name}")
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
-            conformation_embed.title += ": **COMPLETED**"
+            conformation_embed.title += ": **COMPLETED**"  # type: ignore
 
             data = {
                 "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
@@ -355,7 +426,16 @@ class Twitch(commands.Cog):
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
-    def format_data_for_discord(self, data) -> discord.Embed:
+    def format_data_for_discord(self, data: MemberData) -> discord.Embed:
+        """
+        Format raw db data into a discord embed.
+
+        Args:
+            data: db data to format
+
+        Returns:
+            formatted discord embed
+        """
         embed = discord.Embed(title=f"Data for user `{data['discord_name']}`")
 
         for name, value in data.items():
@@ -367,7 +447,14 @@ class Twitch(commands.Cog):
 
         return embed
 
-    async def delete_popup(self, ctx: SlashContext, data) -> None:
+    async def delete_popup(self, ctx: SlashContext, data: MemberData) -> None:
+        """
+        Create a popup to make sure they want to delete an account.
+
+        Args:
+            ctx: the interaction context to create popup in
+            data: data/user to create popup for
+        """
         embed = self.format_data_for_discord(data)
         embed.colour = discord.Color.blue()
         embed.title = f"Delete `{data['discord_name']}`/`{data['twitch_name']}`"
@@ -419,6 +506,12 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def unregister(self, ctx: SlashContext) -> None:
+        """
+        Unregister activating user.
+
+        Args:
+            ctx: the interaction context
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": str(ctx.author.id)})
 
@@ -444,9 +537,15 @@ class Twitch(commands.Cog):
         guild_ids=[GUILD_ID],
     )
     async def points_command(self, ctx: SlashContext) -> None:
+        """
+        Get points of activating user.
+
+        Args:
+            ctx: the interaction context
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
-        userData = self.members.find_one({"discord_id": str(ctx.author.id)})
-        if userData is None:
+        user_data = self.members.find_one({"discord_id": str(ctx.author.id)})
+        if user_data is None:
             error_embed = discord.Embed(
                 color=discord.Color.red(),
                 title="Not found.",
@@ -460,10 +559,10 @@ class Twitch(commands.Cog):
                 hidden=constants.HIDE_MESSAGES,
             )
         else:
-            points = userData["points"]
+            points = user_data["points"]
             points_embed = discord.Embed(
                 color=discord.Color.blue(),
-                title=f"Points for {userData['twitch_name']}",
+                title=f"Points for {user_data['twitch_name']}",
                 description=f"You have **{points}** points",
             )
 
@@ -494,6 +593,13 @@ class Twitch(commands.Cog):
         },
     )
     async def delete_command(self, ctx: SlashContext, user: discord.User) -> None:
+        """
+        Delete an account.
+
+        Args:
+            ctx: the interaction context
+            user: user to delete account of.
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": str(user.id)})
         if data is None:
@@ -534,6 +640,13 @@ class Twitch(commands.Cog):
         },
     )
     async def view_command(self, ctx: SlashContext, user: discord.User) -> None:
+        """
+        View database entry of one discord user.
+
+        Args:
+            ctx: the interaction context
+            user: user to view entry of.
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": str(user.id)})
         if data is None:
@@ -568,6 +681,12 @@ class Twitch(commands.Cog):
         },
     )
     async def view_all_command(self, ctx: SlashContext) -> None:
+        """
+        View all database entries.
+
+        Args:
+            ctx: the interaction context
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         embeds = [
             self.format_data_for_discord(account) for account in self.members.find()
@@ -606,8 +725,19 @@ class Twitch(commands.Cog):
         },
     )
     async def transfer_command(
-        self, ctx: SlashContext, from_user: discord.User, to_user: discord.User
+        self,
+        ctx: SlashContext,
+        from_user: discord.User,
+        to_user: discord.User,
     ) -> None:
+        """
+        Transfere owner ship of a account.
+
+        Args:
+            ctx: the interaction context
+            from_user: user to transfere from
+            to_user: user to transfere to
+        """
         await ctx.defer(hidden=constants.HIDE_MESSAGES)
         data = self.members.find_one({"discord_id": str(from_user.id)})
         if data is None:
@@ -655,13 +785,13 @@ class Twitch(commands.Cog):
 
         if button_ctx.custom_id == cancel_button["custom_id"]:
             conformation_embed.color = discord.Color.red()
-            conformation_embed.title += ": **CANCELD**"
+            conformation_embed.title += ": **CANCELD**"  # type: ignore
 
             await button_ctx.edit_origin(embed=conformation_embed, components=[row])
 
         else:  # we assume we dont have other buttons
             conformation_embed.color = discord.Color.green()
-            conformation_embed.title += ": **COMPLETED**"
+            conformation_embed.title += ": **COMPLETED**"  # type: ignore
 
             new_data = {
                 "discord_name": f"{ctx.author.name}#{ctx.author.discriminator}",
@@ -673,15 +803,25 @@ class Twitch(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(
-        self, before: discord.Member, after: discord.Member
+        self,
+        before: discord.Member,
+        after: discord.Member,
     ) -> None:
-        wasAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in before.roles)
-        isAdmin = any(role.id == constants.ADMIN_ROLE_ID for role in after.roles)
+        """
+        Detect admin and name changes.
 
-        if wasAdmin != isAdmin:
-            logger.info(f"updating {after.id}['isAdmin'] = {isAdmin}")
+        Args:
+            before: state of user before update
+            after: state of user after update
+        """
+        was_admin = any(role.id == constants.ADMIN_ROLE_ID for role in before.roles)
+        is_admin = any(role.id == constants.ADMIN_ROLE_ID for role in after.roles)
+
+        if was_admin != is_admin:
+            logger.info(f"updating {after.id}['isAdmin'] = {is_admin}")
             self.members.update_one(
-                {"discord_id": str(after.id)}, {"$set": {"isAdmin": isAdmin}}
+                {"discord_id": str(after.id)},
+                {"$set": {"isAdmin": is_admin}},
             )
 
         b_nick = f"{before.name}#{before.discriminator}"
@@ -690,9 +830,16 @@ class Twitch(commands.Cog):
         if b_nick != a_nick:
             logger.info(f"updating {after.id}['discord_name'] = {a_nick}")
             self.members.update_one(
-                {"discord_id": str(after.id)}, {"$set": {"discord_name": a_nick}}
+                {"discord_id": str(after.id)},
+                {"$set": {"discord_name": a_nick}},
             )
 
 
 def setup(bot: Bot) -> None:
+    """
+    Add cog to bot.
+
+    Args:
+        bot: bot to add cog to.
+    """
     bot.add_cog(Twitch(bot))

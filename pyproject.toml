@@ -8,18 +8,84 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.9"
 discord = "^1.7.3"
-discord-py-slash-command = "^2.3.2"
 python-dotenv = "^0.19.0"
 loguru = "^0.5.3"
 aiohttp = "^3.7.4"
 pymongo = "^3.12.0"
 dnspython = "^2.1.0"
+discord-py-interactions = "^3.0.2"
 
 [tool.poetry.dev-dependencies]
-flake8 = "^3.9.2"
+flake8 = "*"
+flake8-bugbear = "*"
+pep8-naming = "*"
+flake8-builtins = "*"
+flake8-docstrings = "*"
+darglint = "*"
+flake8-isort = "*"
+flake8-comprehensions = "*"
+flake8-bandit = "*"
+flake8-colors = "*"
+flake8-eradicate = "*"
+flake8-pytest-style = "*"
+flake8-blind-except = "*"
+flake8-black = "*"
+flake8-broken-line = "*"
+flake8-fixme = "*"
+flake8-multiline-containers = "*"
+flake8-pep3101 = "*"
+flake8-simplify = "*"
+flake8-variables-names = "*"
+flake8-functions = "*"
+flake8-expression-complexity = "*"
+flake8-use-fstring = "*"
+flake8-length = "*"
+dlint = "*"
+flake8-annotations-complexity = "*"
+
+mypy = "*"
 black = "^21.7b0"
 pre-commit = "^2.13.0"
 taskipy = "^1.8.1"
+
+# stubs
+"discord.py-stubs" = "*"
+pymongo-stubs = "*"
+
+[tool.mypy]
+#! WARNING: this might supress errors
+ignore_missing_imports = true
+
+# disallow_any_expr = true
+# disallow_any_decorated = true
+# disallow_any_explicit = true
+# disallow_any_generics = true
+# disallow_subclassing_any = true
+
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+# disallow_untyped_decorators = true
+
+no_implicit_optional = true
+strict_optional = true
+
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_return_any = true
+warn_unreachable = true
+
+strict_equality = true
+
+pretty = true
+
+namespace_packages = true
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
 
 [tool.taskipy.tasks]
 bot = { cmd = "python -m bot", help = "Run the bot" }

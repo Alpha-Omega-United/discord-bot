@@ -1,9 +1,12 @@
+"""Internal commnads."""
+
+
 import os
 import sys
 
 import discord
-from discord.ext import commands
 import discord_slash
+from discord.ext import commands
 from discord_slash import cog_ext
 
 from bot.bot import Bot
@@ -11,18 +14,28 @@ from bot.constants import GUILD_ID
 
 
 class InternalCog(commands.Cog):
+    """Internal commnads."""
+
     def __init__(self, bot: Bot):
+        """
+        Store bot value.
+
+        Args:
+            bot: bot this cog is a part of.
+        """
         self.bot = bot
 
     @cog_ext.cog_slash(
         name="status", description="Get info on bot", guild_ids=[GUILD_ID]
     )
     async def status_command(self, ctx: discord_slash.SlashContext) -> None:
+        """
+        Display status for bot.
+
+        Args:
+            ctx: the interaction context
+        """
         await ctx.defer()
-
-        working_correctly = True
-
-        self.bot.database["members"].find_one()
 
         fields = {
             "os": os.uname().release,
@@ -33,7 +46,7 @@ class InternalCog(commands.Cog):
             "started": f"<t:{self.bot.start_timestamp:.0f}:R>",
         }
         embed = discord.Embed(
-            color=discord.Color.green() if working_correctly else discord.Color.red(),
+            color=discord.Color.green(),
             title="Bot status",
         )
         for name, value in fields.items():
@@ -43,4 +56,10 @@ class InternalCog(commands.Cog):
 
 
 def setup(bot: Bot) -> None:
+    """
+    Add cog to bot.
+
+    Args:
+        bot: bot to add cog to
+    """
     bot.add_cog(InternalCog(bot))
