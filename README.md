@@ -34,5 +34,5 @@ Now you can make your changes, and follow the normal git workflow.
 poetry run task lint
 
 # Run black to auto format files so you dont need to do it manualy.
-poetry run task black
+poetry run task format
 ```

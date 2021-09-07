@@ -91,7 +91,7 @@ include_trailing_comma = true
 bot = { cmd = "python -m bot", help = "Run the bot" }
 lint = { cmd = "pre-commit run --all-files", help = "Lints project" }
 precommit = { cmd = "pre-commit install", help = "Installs the pre-commit hook" }
-format = { cmd = "black .", help = "Runs the black python formatter" }
+format = { cmd = "isort .; black .", help = "Runs the black python formatter" }
 
 
 [build-system]
