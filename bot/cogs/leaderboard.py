@@ -1,15 +1,20 @@
 """Manage the servers leaderboard."""
 
+from __future__ import annotations
+
 import asyncio
 import time
+from typing import TYPE_CHECKING
 
 import discord
 import pymongo
 from discord.ext import commands
 
 from bot import constants
-from bot.bot import Bot
-from bot.types import MemberData
+
+if TYPE_CHECKING:
+    from bot.bot import Bot
+    from bot.types import MemberData
 
 SLEEP_TIME = 60 * 10  # 10 minutes
 AMOUNT_OF_USERS = 10

@@ -1,32 +1,30 @@
 """Main cog for interacting with the db."""
 
+from __future__ import annotations
+
 import asyncio
 import re
-from typing import Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import discord
 import discord_slash
 from discord.ext import commands
-from discord_slash import (
-    SlashContext,
-    cog_ext,
-    manage_commands,
-    manage_components,
-)
+from discord_slash import cog_ext, manage_commands, manage_components
 from discord_slash.model import SlashCommandOptionType
 from loguru import logger
 
 from bot import constants
-from bot.bot import Bot
 from bot.constants import GUILD_ID
 from bot.paginator import EmbedPaginator
-from bot.types import (
-    MemberData,
-    TwitchData,
-    TwitchUserResponse,
-    TwitchUserResponseCorrect,
-    TwitchUserResponseError,
-)
+from bot.types import TwitchUserResponseCorrect, TwitchUserResponseError
+
+if TYPE_CHECKING:
+    from typing import Optional
+
+    from discord_slash import SlashContext
+
+    from bot.bot import Bot
+    from bot.types import MemberData, TwitchData, TwitchUserResponse
 
 # matches:
 # https://twitch.tv/username

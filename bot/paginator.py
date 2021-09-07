@@ -1,13 +1,19 @@
 """Paginator is used to go back and fourth in 'pages' ."""
 
+from __future__ import annotations
+
 import abc
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING
 
 import discord
-import discord_slash
 from discord_slash import manage_components
 
-MESSAGE_KWARGS = Dict[str, Any]
+if TYPE_CHECKING:
+    from typing import Any, Awaitable, Callable, Dict, List, Optional
+
+    import discord_slash
+
+    MESSAGE_KWARGS = Dict[str, Any]
 
 
 class Paginator(abc.ABC):

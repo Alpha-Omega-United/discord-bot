@@ -1,14 +1,19 @@
 """Manages live detectoion."""
 
+from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 from loguru import logger
 
 from bot import constants
-from bot.bot import Bot
+
+if TYPE_CHECKING:
+    from typing import Optional
+
+    from bot.bot import Bot
 
 
 class LiveCog(commands.Cog):

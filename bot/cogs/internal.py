@@ -1,16 +1,20 @@
 """Internal commnads."""
 
+from __future__ import annotations
 
 import os
 import sys
+from typing import TYPE_CHECKING
 
 import discord
 import discord_slash
 from discord.ext import commands
 from discord_slash import cog_ext
 
-from bot.bot import Bot
 from bot.constants import GUILD_ID
+
+if TYPE_CHECKING:
+    from bot.bot import Bot
 
 
 class InternalCog(commands.Cog):

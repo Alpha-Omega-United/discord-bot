@@ -4,7 +4,12 @@ Types used in typhinting.
 mainly TypeDicts's.
 """
 
-from typing import List, Optional, TypedDict, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, TypedDict, Union
+
+if TYPE_CHECKING:
+    from typing import List, Optional
 
 
 class StreamingData(TypedDict):

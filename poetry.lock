@@ -543,6 +543,17 @@ astor = ">=0.1"
 flake8 = ">=3.7"
 
 [[package]]
+name = "flake8-type-checking"
+version = "1.0.3"
+description = "A flake8 plugin for managing type-checking imports & forward references"
+category = "dev"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+flake8 = "*"
+
+[[package]]
 name = "flake8-use-fstring"
 version = "1.1"
 description = "Flake8 plugin for string formatting style."
@@ -1068,7 +1079,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "095179bc08728f057750d19e4536546e2a1cec891f6018085dc23443598384ae"
+content-hash = "23c90568a01326a998a8334b07f1de9dbdd982e64dff7004767362143d6509d3"
 
 [metadata.files]
 aiohttp = [
@@ -1284,6 +1295,10 @@ flake8-pytest-style = [
 flake8-simplify = [
     {file = "flake8_simplify-0.14.1-py3-none-any.whl", hash = "sha256:ba5d2905dc277cd4800c6e7f4859f96322d83dd37991ae5f8305750132084dd6"},
     {file = "flake8_simplify-0.14.1.tar.gz", hash = "sha256:d8b38feb97fd6c5943b5d9b2ab352acea83ec036a93215c0576b9e48c6aa2dcc"},
+]
+flake8-type-checking = [
+    {file = "flake8-type-checking-1.0.3.tar.gz", hash = "sha256:a236558b2b001b2f4909713342306c22d5c1fe8607053c3cf9d5abb13ba82ec7"},
+    {file = "flake8_type_checking-1.0.3-py3-none-any.whl", hash = "sha256:f76e71b0d9aae4dffe163dd62c2eacabbb3f94649cdd1f1bc6d16af34a2b7849"},
 ]
 flake8-use-fstring = [
     {file = "flake8-use-fstring-1.1.tar.gz", hash = "sha256:a0eea849ffe33fb6903c210c243c0f418da86a530e46cb13e64f1bdb045f22dc"},
