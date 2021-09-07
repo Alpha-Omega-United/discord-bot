@@ -45,6 +45,7 @@ flake8-annotations-complexity = "*"
 flake8-type-checking = "*"
 
 mypy = "*"
+isort = "*"
 black = "^21.7b0"
 pre-commit = "^2.13.0"
 taskipy = "^1.8.1"

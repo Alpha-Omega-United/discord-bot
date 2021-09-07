@@ -47,10 +47,5 @@ jobs:
       #
       # Format used:
       # ::error file={filename},line={line},col={col}::{message}
-      - name: Run flake8
-        run: "poetry run flake8 \
-        --format='::error file=%(path)s,line=%(row)d,col=%(col)d::[flake8] %(code)s: %(text)s'"
-
-      # Run black
-      - name: Run black
-        run: poetry run black . --check --diff
+      - name: Run linting
+        run: "poetry run take lint"
