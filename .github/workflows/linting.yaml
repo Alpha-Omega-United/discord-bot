@@ -48,4 +48,4 @@ jobs:
       # Format used:
       # ::error file={filename},line={line},col={col}::{message}
       - name: Run linting
-        run: "poetry run take lint"
+        run: "poetry run task lint"
