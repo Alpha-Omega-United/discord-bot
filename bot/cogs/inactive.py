@@ -60,6 +60,10 @@ class InactiveCog(commands.Cog):
             if isinstance(channel, discord.TextChannel):
                 logger.info(f"getting messages in {channel}")
                 async for message in channel.history(limit=None, after=thirty_days_ago):
+                    if all(date is not None for date in members.values()):
+                        logger.warning("gotten time for all users!")
+                        break
+
                     logger.debug(f"{message.author}: {message.content}")
                     author = cast(Optional[discord.Member], message.author)
                     if author in members and members[author] is None:
