@@ -151,7 +151,9 @@ class InactiveCog(commands.Cog):
             if member.bot:
                 continue
 
-            logger.info(f"notifiying member {member}")
+            logger.info(
+                f"notifiying member {member}, last seen {member_data['last_seen']}"
+            )
             await asyncio.sleep(5)
 
             last_seen: datetime = member_data["last_seen"]
@@ -204,7 +206,9 @@ class InactiveCog(commands.Cog):
             if member.bot:
                 continue
 
-            logger.info(f"kicking member {member}")
+            logger.info(
+                f"kicking member {member}, last seen {member_data['last_seen']}"
+            )
             await asyncio.sleep(5)
 
             notify_embed = discord.Embed(
