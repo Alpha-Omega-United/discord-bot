@@ -149,6 +149,15 @@ class InactiveCog(commands.Cog):
             if member is None:
                 logger.error(f"could not get member for id {member_data}")
                 continue
+            logger.info(
+                f"would notify member {member}, last seen {member_data['last_seen']}"
+            )
+
+        for member_data in need_to_be_notified:
+            member = self.guild.get_member(member_data["discord_id"])
+            if member is None:
+                logger.error(f"could not get member for id {member_data}")
+                continue
 
             if member.bot:
                 continue
