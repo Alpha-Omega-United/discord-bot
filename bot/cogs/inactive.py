@@ -35,19 +35,8 @@ class InactiveCog(commands.Cog):
         self.bot = bot
         self.last_seen_db = self.bot.database["last_seen"]
 
-    @commands.Cog.listener()
-    async def on_ready(self) -> None:
-        """
-        Fetch needed values.
-
-        Raises:
-            ValueError: guild not found
-        """
-        guild = self.bot.get_guild(GUILD_ID)
-        if guild is None:
-            raise ValueError("Guild not found.")
-        self.guild = guild
-
+    async def sync_times_with_db(self) -> None:
+        """Sync times."""
         # sync members
         logger.info("syncing inactive members.")
 
@@ -88,6 +77,19 @@ class InactiveCog(commands.Cog):
             )
 
         logger.info("synced inactive members.")
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """
+        Fetch needed values.
+
+        Raises:
+            ValueError: guild not found
+        """
+        guild = self.bot.get_guild(GUILD_ID)
+        if guild is None:
+            raise ValueError("Guild not found.")
+        self.guild = guild
 
         self.check_inactivty_statuses.start()
 
