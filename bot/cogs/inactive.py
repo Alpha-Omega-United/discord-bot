@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Optional, cast
 
@@ -151,6 +152,7 @@ class InactiveCog(commands.Cog):
                 continue
 
             logger.info(f"notifiying member {member}")
+            await asyncio.sleep(5)
 
             last_seen: datetime = member_data["last_seen"]
 
@@ -203,6 +205,7 @@ class InactiveCog(commands.Cog):
                 continue
 
             logger.info(f"kicking member {member}")
+            await asyncio.sleep(5)
 
             notify_embed = discord.Embed(
                 color=discord.Color.red(),
