@@ -64,7 +64,7 @@ class InactiveCog(commands.Cog):
                         logger.warning("gotten time for all users!")
                         break
 
-                    logger.debug(f"{message.author}: {message.content}")
+                    logger.debug(f"{message.author}: {message.created_at}")
                     author = cast(Optional[discord.Member], message.author)
                     if author in members and members[author] is None:
                         members[author] = message.edited_at or message.created_at
