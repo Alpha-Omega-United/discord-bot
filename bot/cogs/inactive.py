@@ -142,6 +142,8 @@ class InactiveCog(commands.Cog):
             )
         )
 
+        logger.info(f"need to notify {len(need_to_be_notified)} people")
+
         for member_data in need_to_be_notified:
             member = self.guild.get_member(member_data["discord_id"])
             if member is None:
@@ -196,6 +198,8 @@ class InactiveCog(commands.Cog):
                 }
             )
         )
+
+        logger.info(f"need to kick {len(need_to_be_kicked)} people")
 
         for member_data in need_to_be_kicked:
             member = self.guild.get_member(member_data["discord_id"])
