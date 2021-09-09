@@ -68,6 +68,9 @@ LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 876494154354528316))
 LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID", 880917372658155531))
 
 
+SYNC_TIMES = bool(int(os.getenv("SYNC_TIMES", False)))
+
+
 class Paths:
     """Folder paths."""
 

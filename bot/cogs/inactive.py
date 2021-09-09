@@ -48,15 +48,19 @@ class InactiveCog(commands.Cog):
         for channel in self.guild.channels:
             if isinstance(channel, discord.TextChannel):
                 logger.info(f"getting messages in {channel}")
-                async for message in channel.history(limit=None, after=thirty_days_ago):
+                async for message in channel.history(
+                    limit=None, after=thirty_days_ago, oldest_first=True
+                ):
                     if all(date is not None for date in members.values()):
                         logger.warning("gotten time for all users!")
                         break
 
                     logger.debug(f"{message.author}: {message.created_at}")
                     author = cast(Optional[discord.Member], message.author)
-                    if author in members and members[author] is None:
-                        members[author] = message.edited_at or message.created_at
+                    if author in members:
+                        msg_time = message.edited_at or message.created_at
+                        if members[author] is None or msg_time > members[author]:  # type: ignore
+                            members[author] = msg_time
 
         for member, last_seen in members.items():
             logger.info(f"updating for user {member} to {last_seen}")
