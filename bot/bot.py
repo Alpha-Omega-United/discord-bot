@@ -36,6 +36,7 @@ class Bot(commands.Bot):
         intents.members = True
         intents.guilds = True
         intents.presences = True
+        intents.guild_messages = True
 
         super().__init__(
             # to be able to load cogs we need to use commands.Bot,
@@ -52,6 +53,7 @@ class Bot(commands.Bot):
         logger.info("Connecting to DB")
         self.db_client = pymongo.MongoClient(constants.DATABASE_URI)
         self.database = self.db_client[constants.DATABASE_NAME]
+        self.members = self.db_client["members"]
 
         self.log_channel: discord.TextChannel
 

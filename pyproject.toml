@@ -11,9 +11,9 @@ discord = "^1.7.3"
 python-dotenv = "^0.19.0"
 loguru = "^0.5.3"
 aiohttp = "^3.7.4"
-pymongo = "^3.12.0"
 dnspython = "^2.1.0"
 discord-py-interactions = "^3.0.2"
+pymongo = "^3.12.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
@@ -37,7 +37,10 @@ flake8-pep3101 = "*"
 flake8-simplify = "*"
 flake8-variables-names = "*"
 flake8-functions = "*"
-flake8-expression-complexity = "*"
+
+# crashed on async for
+# flake8-expression-complexity = "*"
+
 flake8-use-fstring = "*"
 flake8-length = "*"
 dlint = "*"
