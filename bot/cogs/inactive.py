@@ -179,10 +179,10 @@ class InactiveCog(commands.Cog):
             else:
                 logger.info("notifed user.")
 
-        self.last_seen_db.update_many(
-            {"_id": {"$in": [data["_id"] for data in need_to_be_notified]}},
-            {"$set": {"sent_notification": True}},
-        )
+            self.last_seen_db.update(
+                {"_id": member.id},
+                {"$set": {"sent_notification": True}},
+            )
 
     async def kick_inactive_users(self) -> None:
         """Kick members being inactive for over 30 days."""
