@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Optional, cast
 
@@ -125,8 +124,8 @@ class InactiveCog(commands.Cog):
         """Do inactive user checks."""
         logger.info("doing inactivty check")
 
-        # await self.send_inactive_notifications()
-        await self.kick_inactive_users()
+        await self.send_inactive_notifications()
+        # await self.kick_inactive_users()
 
         logger.info("inactivty check done")
 
@@ -165,7 +164,6 @@ class InactiveCog(commands.Cog):
             logger.info(
                 f"notifiying member {member}, last seen {member_data['last_seen']}"
             )
-            await asyncio.sleep(5)
 
             last_seen: datetime = member_data["last_seen"]
 
@@ -231,7 +229,6 @@ class InactiveCog(commands.Cog):
             logger.info(
                 f"kicking member {member}, last seen {member_data['last_seen']}"
             )
-            await asyncio.sleep(5)
 
             notify_embed = discord.Embed(
                 color=discord.Color.red(),
@@ -268,4 +265,4 @@ def setup(bot: Bot) -> None:
     Args:
         bot: bot to add cog to
     """
-    bot.add_cog(InactiveCog(bot))
+    # bot.add_cog(InactiveCog(bot))  # noqa: E800
