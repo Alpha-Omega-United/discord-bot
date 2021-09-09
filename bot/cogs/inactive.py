@@ -125,7 +125,7 @@ class InactiveCog(commands.Cog):
         """Do inactive user checks."""
         logger.info("doing inactivty check")
 
-        await self.send_inactive_notifications()
+        # await self.send_inactive_notifications()
         await self.kick_inactive_users()
 
         logger.info("inactivty check done")
@@ -209,6 +209,15 @@ class InactiveCog(commands.Cog):
         )
 
         logger.info(f"need to kick {len(need_to_be_kicked)} people")
+
+        for member_data in need_to_be_kicked:
+            member = self.guild.get_member(member_data["discord_id"])
+            if member is None:
+                logger.error(f"could not get member for id {member_data}")
+                continue
+            logger.info(
+                f"would kick member {member}, last seen {member_data['last_seen']}"
+            )
 
         for member_data in need_to_be_kicked:
             member = self.guild.get_member(member_data["discord_id"])
