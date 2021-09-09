@@ -60,6 +60,7 @@ class InactiveCog(commands.Cog):
             if isinstance(channel, discord.TextChannel):
                 logger.info(f"getting messages in {channel}")
                 async for message in channel.history(limit=None, after=thirty_days_ago):
+                    logger.debug(f"{message.author}: {message.content}")
                     author = cast(Optional[discord.Member], message.author)
                     if author in members and members[author] is None:
                         members[author] = message.edited_at or message.created_at
