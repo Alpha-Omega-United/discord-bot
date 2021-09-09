@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands, tasks
 from loguru import logger
 
-from bot.constants import GUILD_ID
+from bot.constants import GUILD_ID, SYNC_TIMES
 
 if TYPE_CHECKING:
     from typing import Dict
@@ -94,6 +94,9 @@ class InactiveCog(commands.Cog):
         if guild is None:
             raise ValueError("Guild not found.")
         self.guild = guild
+
+        if SYNC_TIMES:
+            await self.sync_times_with_db()
 
         self.check_inactivty_statuses.start()
 
