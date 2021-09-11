@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from typing import TYPE_CHECKING
 
 import discord
 import pymongo
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from bot import constants
 
@@ -16,7 +15,6 @@ if TYPE_CHECKING:
     from bot.bot import Bot
     from bot.types import MemberData
 
-SLEEP_TIME = 60 * 10  # 10 minutes
 AMOUNT_OF_USERS = 10
 
 
@@ -60,10 +58,9 @@ class LeaderboardCog(commands.Cog):
         else:
             self.leaderboard_message = await channel.send("TMP")
 
-        while True:
-            await self.update_leaderboard()
-            await asyncio.sleep(SLEEP_TIME)
+        self.update_leaderboard.start()
 
+    @tasks.loop(minutes=10)
     async def update_leaderboard(self) -> None:
         """Update the leaderboard message with the newest points."""
         current_time = time.time()
