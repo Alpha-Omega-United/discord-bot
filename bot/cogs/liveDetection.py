@@ -27,7 +27,7 @@ class LiveCog(commands.Cog):
             bot: the bot this cog is a part of
         """
         self.bot = bot
-        self.members = self.bot.database["members"]
+        self.members = bot.members
 
     @staticmethod
     def user_is_streaming(user: discord.Member) -> Optional[discord.Streaming]:
@@ -100,7 +100,6 @@ class LiveCog(commands.Cog):
         is_streaming = streaming_act is not None
 
         if was_streaming != is_streaming:
-            logger.info(f"updating live status for {before} to {is_streaming}")
             if streaming_act is None:
                 self.members.update_one(
                     {"discord_id": str(after.id)},

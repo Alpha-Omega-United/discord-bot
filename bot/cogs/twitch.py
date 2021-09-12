@@ -40,6 +40,8 @@ TWITCH_USER_ENDPOINT = "https://api.twitch.tv/helix/users"
 class Twitch(commands.Cog):
     """Cog taking care of accounts in db."""
 
+    token: str
+
     def __init__(self, bot: Bot):
         """
         Create an instance.
@@ -48,8 +50,7 @@ class Twitch(commands.Cog):
             bot: the bot this cog is a part of
         """
         self.bot = bot
-        self.members = bot.database["members"]
-        self.token: str
+        self.members = bot.members
 
     async def sync_admins(self) -> None:
         """
@@ -74,13 +75,7 @@ class Twitch(commands.Cog):
             {"discord_id": {"$in": admins}}, {"$set": {"isAdmin": True}}
         )
         self.members.update_many(
-            {
-                "$and": [
-                    {"discord_id": {"$ne": None}},
-                    {"discord_id": {"$exists": True}},
-                    {"discord_id": {"$nin": admins}},
-                ]
-            },
+            {"discord_id": {"$ne": None, "$exists": True, "$nin": admins}},
             {"$set": {"isAdmin": False}},
         )
 

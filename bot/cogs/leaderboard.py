@@ -29,7 +29,7 @@ class LeaderboardCog(commands.Cog):
             bot: the bot this cog is a part of
         """
         self.bot = bot
-        self.members = self.bot.database["members"]
+        self.members = bot.members
 
         self.leaderboard_message: discord.Message
 

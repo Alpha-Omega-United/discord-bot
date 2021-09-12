@@ -13,6 +13,7 @@ from discord.ext import commands
 from loguru import logger
 
 from bot import constants
+from bot.spy import InstanceProxy
 
 # The reason we need this, is that dns lookup fails with default settings,
 # so we need to set the dns severs manually,
@@ -53,7 +54,7 @@ class Bot(commands.Bot):
         logger.info("Connecting to DB")
         self.db_client = pymongo.MongoClient(constants.DATABASE_URI)
         self.database = self.db_client[constants.DATABASE_NAME]
-        self.members = self.db_client["members"]
+        self.members = InstanceProxy(self.database["members"])
 
         self.log_channel: discord.TextChannel
 
