@@ -31,6 +31,8 @@ import pymongo  # noqa: E402
 class Bot(commands.Bot):
     """Classes that manages core bot functions."""
 
+    guild: discord.Guild
+
     def __init__(self) -> None:
         """Create Bot."""
         intents = discord.Intents.none()
@@ -54,7 +56,9 @@ class Bot(commands.Bot):
         logger.info("Connecting to DB")
         self.db_client = pymongo.MongoClient(constants.DATABASE_URI)
         self.database = self.db_client[constants.DATABASE_NAME]
-        self.members = InstanceProxy(self.database["members"])
+
+        self.members = InstanceProxy(self.database["members"], "db.members")
+        self.role_info = InstanceProxy(self.database["role_info"], "db.role_info")
 
         self.log_channel: discord.TextChannel
 
@@ -83,6 +87,11 @@ class Bot(commands.Bot):
             ValueError: log channel not found as text
         """
         logger.info("Bot online.")
+        guild = self.get_guild(constants.GUILD_ID)
+        if guild is None:
+            raise ValueError("guild not found.")
+        self.guild = guild
+
         channel = self.get_channel(constants.LOG_CHANNEL_ID)
         if not isinstance(channel, discord.TextChannel):
             raise ValueError("expected TextChannel but did not get one")
