@@ -1,4 +1,4 @@
-"""Internal commnads."""
+"""Role info commnads."""
 
 from __future__ import annotations
 
