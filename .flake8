@@ -1,6 +1,16 @@
 [flake8]
-max-line-length = 120
+max-line-length = 90
 
 format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
 show-source=True
+
+# type hinting style
 enable-extensions = TC, TC1
+
+extend-ignore =
+    # complains about the injector calls
+    # "Do not perform function calls in argument defaults."
+    B008
+    # not pep8 compliant
+    # https://github.com/psf/black/blob/06ccb88bf2bd35a4dc5d591bb296b5b299d07323/docs/guides/using_black_with_other_tools.md#flake8
+    E203

@@ -1,10 +1,9 @@
 """Constants and configs."""
-
-
 import os
 import pathlib
 
 import dotenv
+import hikari
 
 dotenv.load_dotenv()
 
@@ -65,15 +64,21 @@ LIVE_ROLE_ID = int(os.getenv("LIVE_ROLE_ID", 797573767974617118))
 
 GUILD_ID = int(os.getenv("GUILD_ID", 797571990176661504))
 LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 876494154354528316))
-LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID", 880917372658155531))
-
-
-SYNC_TIMES = bool(int(os.getenv("SYNC_TIMES", False)))
+LEADERBOARD_CHANNEL_ID = int(
+    os.getenv("LEADERBOARD_CHANNEL_ID", 880917372658155531)
+)
 
 
 class Paths:
     """Folder paths."""
 
     src = pathlib.Path("bot")
-    cogs = src / "cogs"
+    modules = src / "modules"
     resources = src / "resources"
+
+
+class Colors:
+    RED = hikari.Color(0xFF0000)
+    GREEN = hikari.Color(0x07E500)
+    BLUE = hikari.Color(0x0044F2)
+    YELLOW = hikari.Color(0xF7EB02)
