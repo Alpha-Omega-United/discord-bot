@@ -13,7 +13,7 @@ aiohttp = "^3.7.4"
 dnspython = "^2.1.0"
 
 taskipy = "^1.8.1"
-hikari-tanjun = { git = "git@github.com:FasterSpeeding/Tanjun.git", branch = "master"}
+hikari-tanjun = { git = "https://github.com/FasterSpeeding/Tanjun.git", branch = "master"}
 APScheduler = "^3.7.0"
 motor = "^2.5.1"
 

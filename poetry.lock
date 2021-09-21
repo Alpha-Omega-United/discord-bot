@@ -559,7 +559,7 @@ tests = ["pytest (==6.2.5)", "pytest-asyncio (==0.15.1)", "pytest-cov (==2.12.1)
 
 [package.source]
 type = "git"
-url = "git@github.com:FasterSpeeding/Tanjun.git"
+url = "https://github.com/FasterSpeeding/Tanjun.git"
 reference = "master"
 resolved_reference = "8ca8deacd3a72f84f2c3308876fe31018d9154e0"
 
@@ -1050,7 +1050,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.9"
-content-hash = "796c1379587b06a92cc1011a988e71ea100ed7ff78fd1cb270fd17ce04cf804b"
+content-hash = "1a399798d4f83953def2aad9d719c1ebc63efb429f4db013db1e70501c3b22f9"
 
 [metadata.files]
 aiohttp = [
