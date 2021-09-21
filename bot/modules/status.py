@@ -5,6 +5,8 @@ import time
 import hikari
 import tanjun
 
+from bot import constants
+
 component = tanjun.Component()
 
 
@@ -23,7 +25,7 @@ async def command_status(
     """
 
     embed = (
-        hikari.Embed(title="Bot status", color=hikari.Color(0x07E500))
+        hikari.Embed(title="Bot status", color=constants.Colors.GREEN)
         .add_field(name="os", value=os.uname().release, inline=True)
         .add_field(
             name="python",
@@ -48,16 +50,24 @@ async def command_status(
 @component.with_listener(hikari.StartedEvent)
 async def store_start_time(
     event: hikari.StartedEvent,
-    client: tanjun.Client = tanjun.injected(type=tanjun.Client),
 ) -> None:
-    """
-    Store start time.
-
-    Args:
-        event (hikari.StartedEvent): StartedEvent.
-        client (tanjun.Client, optional): tanjun client to store time on.
-    """
     component.metadata["start_time"] = int(time.time())
+
+
+@component.with_listener(hikari.StartedEvent)
+async def send_online_embed(
+    event: hikari.StartedEvent,
+    rest: hikari.impl.RESTClientImpl = tanjun.injected(
+        type=hikari.impl.RESTClientImpl
+    ),
+) -> None:
+    embed = hikari.Embed(
+        title="Bot online",
+        color=constants.Colors.GREEN,
+        description="Bot is online!",
+    )
+
+    await rest.create_message(constants.LOG_CHANNEL_ID, embed=embed)
 
 
 @tanjun.as_loader
