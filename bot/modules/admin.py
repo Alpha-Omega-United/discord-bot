@@ -55,6 +55,7 @@ async def detect_admin_change(
 admin_group = tanjun.slash_command_group(
     "admin",
     "commands for interacting with our account system using your admin powers!",
+    default_permission=False,
 )
 
 
@@ -142,6 +143,33 @@ async def command_tranfere(
 
 
 component.add_slash_command(admin_group)
+
+
+@component.with_listener(hikari.StartedEvent)
+async def make_admin_admin_only(
+    event: hikari.StartedEvent,
+    rest: hikari.impl.RESTClientImpl = tanjun.injected(
+        type=hikari.impl.RESTClientImpl
+    ),
+) -> None:
+    application = await rest.fetch_application()
+    commands = await rest.fetch_application_commands(
+        application, constants.GUILD_ID
+    )
+    command = next(
+        command for command in commands if command.name == admin_group.name
+    )
+
+    permissions = [
+        hikari.CommandPermission(
+            type=hikari.CommandPermissionType.ROLE,
+            id=constants.ADMIN_ROLE_ID,
+            has_access=True,
+        )
+    ]
+    await rest.set_application_command_permissions(
+        application, constants.GUILD_ID, command, permissions
+    )
 
 
 @tanjun.as_loader
