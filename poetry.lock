@@ -561,7 +561,7 @@ tests = ["pytest (==6.2.5)", "pytest-asyncio (==0.15.1)", "pytest-cov (==2.12.1)
 type = "git"
 url = "https://github.com/FasterSpeeding/Tanjun"
 reference = "master"
-resolved_reference = "17d54c14d20f4cd664606fa3c0448ce2375a343f"
+resolved_reference = "8f8904f3c1c340942d1da2cecc639293470a32c4"
 
 [[package]]
 name = "identify"

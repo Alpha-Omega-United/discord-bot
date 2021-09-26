@@ -16,7 +16,7 @@ def create_bot() -> hikari.GatewayBot:
 
     bot = hikari.GatewayBot(constants.TOKEN, intents=intents)
     client = tanjun.Client.from_gateway_bot(
-        bot, set_global_commands=constants.GUILD_ID  # type: ignore
+        bot, set_global_commands=constants.GUILD_ID
     ).load_modules(*constants.Paths.modules.glob("*.py"))
 
     injectors.register_injectors(client)
