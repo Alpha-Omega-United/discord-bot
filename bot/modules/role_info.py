@@ -10,6 +10,8 @@ from bot import constants, injectors
 if TYPE_CHECKING:
     from motor import motor_asyncio as motor
 
+    from bot.types import RoleInfoDocument
+
 
 component = tanjun.Component()
 
@@ -95,7 +97,7 @@ async def command_role(
     ),
 ) -> None:
 
-    role_data = await role_info.find_one({"role_id": role.id})
+    role_data: RoleInfoDocument = await role_info.find_one({"role_id": role.id})
 
     if role_data is None:
         await ctx.respond(

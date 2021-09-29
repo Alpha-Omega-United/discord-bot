@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import hikari
 import tanjun
-from loguru import logger
 
 from bot import constants, injectors
 
@@ -59,8 +58,6 @@ async def update_streaming_status(
                 }
             },
         )
-
-    logger.info(f"{member_id} -> {streaming_act}")
 
 
 @component.with_listener(hikari.StartedEvent)

@@ -16,6 +16,7 @@ taskipy = "^1.8.1"
 APScheduler = "^3.7.0"
 motor = "^2.5.1"
 hikari-tanjun = { git="https://github.com/FasterSpeeding/Tanjun" }
+typing-extensions = "^3.10.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
@@ -45,43 +46,11 @@ dlint = "*"
 flake8-annotations-complexity = "*"
 flake8-type-checking = "*"
 
-mypy = "*"
 isort = "*"
 black = "^21.7b0"
+pyright = "^0.0.10"
 pre-commit = "^2.13.0"
-
-# stubs
-
-[tool.mypy]
-#! WARNING: this might supress errors
-ignore_missing_imports = true
-
-# disallow_any_expr = true
-# disallow_any_decorated = true
-# disallow_any_explicit = true
-# disallow_any_generics = true
-# disallow_subclassing_any = true
-
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-
-no_implicit_optional = true
-strict_optional = true
-
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_return_any = true
-warn_unreachable = true
-
-strict_equality = true
-
-pretty = true
-
-namespace_packages = true
+pymongo-stubs = "^0.1.0"
 
 [tool.isort]
 multi_line_output = 3
@@ -99,3 +68,41 @@ format = { cmd = "isort .; black .", help = "Runs the black python formatter" }
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pyright]
+include = ["bot"]
+pythonPlatform = "linux"
+pythonVersion = "3.9"
+
+useLibraryCodeForTypes = true
+
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+strictParameterNoneValue = true
+reportFunctionMemberAccess = true
+reportMissingImports = true
+reportMissingModuleSource = "warning"
+reportUntypedFunctionDecorator = true
+reportUntypedClassDecorator = true
+reportUntypedBaseClass = true
+reportUntypedNamedTuple = true
+reportPrivateUsage = true
+reportConstantRedefinition = true
+reportIncompatibleMethodOverride = true
+reportIncompatibleVariableOverride = true
+reportOverlappingOverload = true
+
+# motor is not type hinted so it complains
+# reportUnknownParameterType = true
+# reportUnknownArgumentType = true
+# reportUnknownLambdaType = true
+# reportUnknownVariableType = true
+# reportUnknownMemberType = true
+
+reportMissingTypeArgument = true
+reportInvalidTypeVarUse = true
+reportUnnecessaryIsInstance = true
+reportUnnecessaryCast = true
+reportUnnecessaryComparison = true

@@ -3,21 +3,21 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import hikari
 import tanjun
 
 from bot import constants, injectors, utils
+from bot.types import TwitchErrorResponse, TwitchUserData
 
 if TYPE_CHECKING:
     from typing import Optional
 
     from motor import motor_asyncio as motor
 
-
-JSON = Dict[str, Any]
+    from bot.types import MemberDocument, TwitchResponse
 
 
 TWITCH_URL = re.compile(r"^(https?:\/\/)?twitch\.tv\/(.+)$")
@@ -54,7 +54,7 @@ async def grab_twitch_token(
 
 async def get_twitch_data(
     http_session: aiohttp.ClientSession, username: str
-) -> Optional[JSON]:
+) -> Optional[TwitchUserData]:
     headers = {
         "Authorization": f"Bearer {component.metadata['twitch_token']}",
         "Client-Id": constants.TWITCH_CLIENT_ID,
@@ -64,18 +64,19 @@ async def get_twitch_data(
     async with http_session.get(
         TWITCH_USER_ENDPOINT, params=params, headers=headers
     ) as resp:
-        raw_data = await resp.json()
+        raw_data: TwitchResponse = await resp.json()
 
     if "error" in raw_data:
-        raise ValueError(raw_data["message"])
+        raw_data = cast(TwitchErrorResponse, raw_data)
+        raise Exception(raw_data["message"])
 
     data = raw_data["data"]
     if len(data) == 0:
         return None
     else:
-        user_data: JSON = data[0]
-        user_data["id"] = int(user_data["id"])
-        return user_data
+        user_data = data[0]
+
+        return cast(TwitchUserData, {**user_data, "id": int(user_data["id"])})
 
 
 @twitch_group.with_command
@@ -111,15 +112,15 @@ async def command_register(
         await ctx.respond(embed=error_embed)
         return
 
-    twitch_user_in_db = await members.find_one({"twitch_id": twitch_data["id"]})
+    twitch_user_in_db: MemberDocument = await members.find_one(
+        {"twitch_id": twitch_data["id"]}
+    )
     if twitch_user_in_db is not None:
         if twitch_user_in_db.get("discord_id") is None:
             # no discord account linked, lets do that
             await link_exsisting_twitch_to_discord(
                 ctx, members, twitch_user_in_db, twitch_data
             )
-            return
-
         else:  # account it taken by somebody else
             error_embed = hikari.Embed(
                 title="Account already registerd",
@@ -132,21 +133,23 @@ async def command_register(
                 color=constants.Colors.RED,
             ).set_thumbnail(twitch_data["profile_image_url"])
             await ctx.respond(embed=error_embed)
-            return
 
-    discord_user_in_db = await members.find_one(
-        {"discord_id": str(ctx.author.id)}
-    )
-    if discord_user_in_db is None:
-        await register_new(ctx, members, twitch_data)
     else:
-        await overwrite_twitch(ctx, members, discord_user_in_db, twitch_data)
+        discord_user_in_db: MemberDocument = await members.find_one(
+            {"discord_id": str(ctx.author.id)}
+        )
+        if discord_user_in_db is None:
+            await register_new(ctx, members, twitch_data)
+        else:
+            await overwrite_twitch(
+                ctx, members, discord_user_in_db, twitch_data
+            )
 
 
 async def register_new(
     ctx: tanjun.SlashContext,
     members: motor.AsyncIOMotorCollection,
-    twitch_data: JSON,
+    twitch_data: TwitchUserData,
 ) -> None:
     async def perform_update() -> None:
         author = await ctx.rest.fetch_member(constants.GUILD_ID, ctx.author)
@@ -184,8 +187,8 @@ async def register_new(
 async def overwrite_twitch(
     ctx: tanjun.SlashContext,
     members: motor.AsyncIOMotorCollection,
-    old_document: JSON,
-    twitch_data: JSON,
+    old_document: MemberDocument,
+    twitch_data: TwitchUserData,
 ) -> None:
     async def perform_update() -> None:
         await members.update_one(
@@ -225,8 +228,8 @@ async def overwrite_twitch(
 async def link_exsisting_twitch_to_discord(
     ctx: tanjun.SlashContext,
     members: motor.AsyncIOMotorCollection,
-    document: JSON,
-    twitch_data: JSON,
+    document: MemberDocument,
+    twitch_data: TwitchUserData,
 ) -> None:
     async def perform_update() -> None:
         member = await ctx.rest.fetch_member(constants.GUILD_ID, ctx.author.id)
@@ -267,7 +270,9 @@ async def command_unregister(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document = await members.find_one({"discord_id": str(ctx.author.id)})
+    document: MemberDocument = await members.find_one(
+        {"discord_id": str(ctx.author.id)}
+    )
     if document is None:
         error_embed = hikari.Embed(
             title="Account not found.",
@@ -301,7 +306,9 @@ async def command_points(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document = await members.find_one({"discord_id": str(ctx.author.id)})
+    document: MemberDocument = await members.find_one(
+        {"discord_id": str(ctx.author.id)}
+    )
     if document is None:
         error_embed = hikari.Embed(
             title="Account not found.",

@@ -14,6 +14,8 @@ from bot.constants import LEADERBOARD_CHANNEL_ID
 if TYPE_CHECKING:
     from motor import motor_asyncio as motor
 
+    from bot.types import MemberDocument
+
 
 component = tanjun.Component()
 
@@ -51,11 +53,16 @@ async def update_leaderboard(
 ) -> None:
     current_time = int(time.time())
 
-    top_users = members.find().sort("points", pymongo.DESCENDING).limit(10)
+    top_users: list[MemberDocument] = (
+        await members.find()
+        .sort("points", pymongo.DESCENDING)
+        .limit(10)
+        .to_list()
+    )
 
-    description_lines = []
+    description_lines: list[str] = []
 
-    async for user in top_users:
+    for user in top_users:
         twittch_channel_name = user["twitch_name"]
         twitch_mention = (
             f"[{twittch_channel_name}]"

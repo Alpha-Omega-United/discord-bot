@@ -8,7 +8,7 @@ import hikari
 from bot import constants
 
 if TYPE_CHECKING:
-    from typing import Any, Coroutine, Union
+    from typing import Awaitable, Union
 
     import tanjun
 
@@ -30,7 +30,10 @@ async def wait_for_interaction(
             and inte.message.id == message.id
         )
 
-    event = await ctx.events.wait_for(  # type: ignore
+    if ctx.events is None:
+        raise TypeError("ctx.events is None")
+
+    event = await ctx.events.wait_for(
         hikari.InteractionCreateEvent, timeout=timeout, predicate=predicate
     )
     return event.interaction  # type: ignore
@@ -48,10 +51,10 @@ class ButtonInfo:
 async def confirmation_embed(
     ctx: tanjun.SlashContext,
     *,
-    callback: Coroutine[Any, Any, None],
+    callback: Awaitable[None],
     embed: hikari.Embed,
     confirm_button: ButtonInfo,
-    deny_button: ButtonInfo = ButtonInfo("Cancel", hikari.ButtonStyle.DANGER)
+    deny_button: ButtonInfo = ButtonInfo("Cancel", hikari.ButtonStyle.DANGER),
 ) -> None:
     confirm_button_id = "confirm"
     deny_button_id = "deny"
@@ -73,14 +76,17 @@ async def confirmation_embed(
     )
     interaction = await wait_for_interaction(ctx, message)
 
+    if embed.title is None:
+        embed.title = ""
+
     if interaction.custom_id == confirm_button_id:
         await callback
 
         embed.color = constants.Colors.GREEN
-        embed.title += ": DONE"  # type: ignore
+        embed.title += ": DONE"
     else:
         embed.color = constants.Colors.RED
-        embed.title += ": Canceld"  # type: ignore
+        embed.title += ": Canceld"
 
     # disable buttons
     buttons = (

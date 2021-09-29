@@ -8,10 +8,11 @@ import tanjun
 from bot import constants, injectors, utils
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional
+    from typing import Optional
 
     from motor import motor_asyncio as motor
 
+    from bot.types import MemberDocument
 
 component = tanjun.Component()
 
@@ -25,7 +26,7 @@ async def sync_admins(
     ),
 ) -> None:
     guild = await bot.rest.fetch_guild(constants.GUILD_ID)
-    admin_ids = []
+    admin_ids: list[str] = []
     for member_id, member in guild.get_members().items():
         if utils.is_admin(member):
             admin_ids.append(str(member_id))
@@ -59,15 +60,15 @@ admin_group = tanjun.slash_command_group(
 )
 
 
-def format_data_for_discord(document: Dict[str, Any]) -> hikari.Embed:
+def format_data_for_discord(document: MemberDocument) -> hikari.Embed:
     return (
         hikari.Embed(title="Data for user.", color=constants.Colors.BLUE)
         .add_field("twitch_name", str(document.get("twitch_name")), inline=True)
         .add_field(
             "discord_name", str(document.get("discord_name")), inline=True
         )
-        .add_field("points", document["points"], inline=True)
-        .add_field("isAdmin", document["isAdmin"], inline=True)
+        .add_field("points", str(document["points"]), inline=True)
+        .add_field("isAdmin", str(document["isAdmin"]), inline=True)
     )
 
 
@@ -88,10 +89,14 @@ async def command_view_db_entry(
         return
 
     if twitch is not None:
-        document = await members.find_one({"twitch_name": twitch})
+        document: MemberDocument = await members.find_one(
+            {"twitch_name": twitch}
+        )
     else:
         discord = cast(hikari.Member, discord)
-        document = await members.find_one({"discord_id": str(discord.id)})
+        document: MemberDocument = await members.find_one(
+            {"discord_id": str(discord.id)}
+        )
 
     if document is None:
         await ctx.respond("Account not found.")
@@ -115,7 +120,9 @@ async def command_tranfere(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document = await members.find_one({"discord_id": str(from_user.id)})
+    document: MemberDocument = await members.find_one(
+        {"discord_id": str(from_user.id)}
+    )
     if document is None:
         await ctx.respond("Account not found.")
         return
@@ -163,7 +170,7 @@ async def make_admin_admin_only(
     permissions = [
         hikari.CommandPermission(
             type=hikari.CommandPermissionType.ROLE,
-            id=constants.ADMIN_ROLE_ID,
+            id=hikari.Snowflake(constants.ADMIN_ROLE_ID),
             has_access=True,
         )
     ]

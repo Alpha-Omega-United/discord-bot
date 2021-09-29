@@ -20,10 +20,10 @@ repos:
         require_serial: true
         pass_filenames: false
 
-      - id: mypy
-        name: mypy
-        description: Lints this repository using mypy.
+      - id: pyright
+        name: pyright
+        description: Lints this repository using pyright.
         language: system
-        entry: poetry run python -m mypy .
+        entry: poetry run python -m pyright
         require_serial: true
         pass_filenames: false
