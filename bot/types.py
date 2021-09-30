@@ -39,30 +39,24 @@ class RoleInfoDocument(TypedDict):
 # twitch
 
 
-class TwitchUserDataRaw(TypedDict):
+class _TwitchUserDataBase(TypedDict):
     brodcaster_type: Literal["partner", "affiliate", ""]
     description: str
     display_name: str
+    login: str
+    offline_image_url: str
+    profile_image_url: str
+    type: Literal["staff", "admin", "global_mod", ""]  # noqa: A003
+    view_count: int
+    created_at: str
+
+
+class TwitchUserDataRaw(_TwitchUserDataBase):
     id: str  # noqa: A003
-    login: str
-    offline_image_url: str
-    profile_image_url: str
-    type: Literal["staff", "admin", "global_mod", ""]  # noqa: A003
-    view_count: int
-    created_at: str
 
 
-class TwitchUserData(TypedDict):
-    brodcaster_type: Literal["partner", "affiliate", ""]
-    description: str
-    display_name: str
+class TwitchUserData(_TwitchUserDataBase):
     id: int  # noqa: A003
-    login: str
-    offline_image_url: str
-    profile_image_url: str
-    type: Literal["staff", "admin", "global_mod", ""]  # noqa: A003
-    view_count: int
-    created_at: str
 
 
 class TwitchSuccessResponse(TypedDict):
