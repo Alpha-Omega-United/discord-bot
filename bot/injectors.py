@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import aiohttp
-import hikari
 import tanjun
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from motor import motor_asyncio as motor
@@ -12,23 +11,6 @@ from bot import constants
 
 if TYPE_CHECKING:
     from typing import Callable
-
-
-def _connect_to_db() -> motor.AsyncIOMotorDatabase:
-    return motor.AsyncIOMotorClient(constants.DATABASE_URI)[
-        constants.DATABASE_NAME
-    ]
-
-
-def _create_scheduler() -> AsyncIOScheduler:
-    scheduler = AsyncIOScheduler()
-    scheduler.start()
-
-    return scheduler
-
-
-def _create_cient_session() -> aiohttp.ClientSession:
-    return aiohttp.ClientSession()
 
 
 def _create_collection_injector(
@@ -48,25 +30,25 @@ get_members_db = _create_collection_injector("members")
 get_role_info_db = _create_collection_injector("role_info")
 
 
+async def register_in_async_context(
+    client: tanjun.Client = tanjun.injected(type=tanjun.Client),
+) -> None:
+    client.set_type_dependency(aiohttp.ClientSession, aiohttp.ClientSession())
+
+
 def register_injectors(client: tanjun.Client) -> None:
+    scheduler = AsyncIOScheduler()
+    scheduler.start()
+
     (
         client.set_type_dependency(
-            motor.AsyncIOMotorDatabase, tanjun.cache_callback(_connect_to_db)
+            motor.AsyncIOMotorDatabase,
+            motor.AsyncIOMotorClient(constants.DATABASE_URI)[
+                constants.DATABASE_NAME
+            ],
         )
-        .set_type_dependency(
-            AsyncIOScheduler, tanjun.cache_callback(_create_scheduler)
-        )
-        .set_type_dependency(
-            aiohttp.ClientSession, tanjun.cache_callback(_create_cient_session)
+        .set_type_dependency(AsyncIOScheduler, scheduler)
+        .add_client_callback(
+            tanjun.ClientCallbackNames.STARTING, register_in_async_context
         )
     )
-
-    @client.with_listener(hikari.StoppedEvent)
-    async def close_http_session(
-        event: hikari.StoppedEvent,
-        http_session: aiohttp.ClientSession = tanjun.injected(
-            type=aiohttp.ClientSession
-        ),
-    ) -> None:
-        print("closing http session.")
-        await http_session.close()
