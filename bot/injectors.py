@@ -41,10 +41,6 @@ get_birthday_db = _create_collection_injector(
 async def register_in_async_context(
     client: tanjun.Client = tanjun.injected(type=tanjun.Client),
 ) -> None:
-    client.set_type_dependency(aiohttp.ClientSession, aiohttp.ClientSession())
-
-
-def register_injectors(client: tanjun.Client) -> None:
     scheduler = AsyncIOScheduler()
     scheduler.start()
 
@@ -55,8 +51,12 @@ def register_injectors(client: tanjun.Client) -> None:
                 constants.DATABASE_NAME
             ],
         )
+        .set_type_dependency(aiohttp.ClientSession, aiohttp.ClientSession())
         .set_type_dependency(AsyncIOScheduler, scheduler)
-        .add_client_callback(
-            tanjun.ClientCallbackNames.STARTING, register_in_async_context
-        )
+    )
+
+
+def register_injectors(client: tanjun.Client) -> None:
+    client.add_client_callback(
+        tanjun.ClientCallbackNames.STARTING, register_in_async_context
     )

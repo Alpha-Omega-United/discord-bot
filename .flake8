@@ -5,7 +5,7 @@ format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(co
 show-source=True
 
 # type hinting style
-enable-extensions = TC, TC1
+enable-extensions = TC
 
 extend-ignore =
     # complains about the injector calls

@@ -16,15 +16,15 @@ taskipy = "^1.8.1"
 APScheduler = "^3.7.0"
 motor = "^2.5.1"
 hikari-tanjun = { git="https://github.com/FasterSpeeding/Tanjun" }
-typing-extensions = "^3.10.0"
+# typing-extensions = "^3.10.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
 flake8-bugbear = "*"
 pep8-naming = "*"
 flake8-builtins = "*"
-flake8-docstrings = "*"
-darglint = "*"
+# flake8-docstrings = "*"
+# darglint = "*"
 flake8-isort = "*"
 flake8-comprehensions = "*"
 flake8-bandit = "*"
@@ -73,7 +73,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pyright]
 include = ["bot"]
 pythonPlatform = "linux"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 useLibraryCodeForTypes = true
 

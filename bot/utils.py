@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -8,7 +6,7 @@ import hikari
 from bot import constants
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Union
+    from typing import Awaitable
 
     import tanjun
 
@@ -21,7 +19,7 @@ def is_admin(member: hikari.Member) -> bool:
 async def wait_for_interaction(
     ctx: tanjun.SlashContext,
     message: hikari.Message,
-    timeout: Union[int, float] = 60 * 5,
+    timeout: int | float = 60 * 5,
 ) -> hikari.ComponentInteraction:
     def predicate(event: hikari.InteractionCreateEvent) -> bool:
         inte = event.interaction
@@ -43,9 +41,9 @@ async def wait_for_interaction(
 class ButtonInfo:
     label: str
     style: hikari.InteractiveButtonTypesT
-    emoji: Union[
-        hikari.Snowflakeish, hikari.Emoji, str, hikari.UndefinedType
-    ] = hikari.UNDEFINED
+    emoji: hikari.Snowflakeish | hikari.Emoji | str | hikari.UndefinedType = (
+        hikari.UNDEFINED
+    )
 
 
 async def confirmation_embed(
