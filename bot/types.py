@@ -3,9 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict, Union
 
 if TYPE_CHECKING:
+    from datetime import datetime
     from typing import Literal, Optional
 
     import bson
+
+
+class MongoDbDocument(TypedDict):
+    _id: bson.ObjectId
 
 
 class StreamData(TypedDict):
@@ -13,9 +18,7 @@ class StreamData(TypedDict):
     url: str
 
 
-class MemberDocument(TypedDict):
-    _id: bson.ObjectId
-
+class MemberDocument(MongoDbDocument):
     twitch_name: str
     twitch_id: int
 
@@ -27,13 +30,17 @@ class MemberDocument(TypedDict):
     isAdmin: bool  # noqa: N815
 
 
-class RoleInfoDocument(TypedDict):
-    _id: bson.ObjectId
-
+class RoleInfoDocument(MongoDbDocument):
     role_id: int
     color: str
     description: str
     name: str
+
+
+class BirthdayDocument(MongoDbDocument):
+    discord_id: int
+    birthday: datetime
+    announced: bool
 
 
 # twitch

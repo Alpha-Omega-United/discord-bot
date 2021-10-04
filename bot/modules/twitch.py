@@ -90,7 +90,7 @@ async def command_register(
     http_session: aiohttp.ClientSession = tanjun.injected(
         type=aiohttp.ClientSession
     ),
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -112,9 +112,7 @@ async def command_register(
         await ctx.respond(embed=error_embed)
         return
 
-    twitch_user_in_db: MemberDocument = await members.find_one(
-        {"twitch_id": twitch_data["id"]}
-    )
+    twitch_user_in_db = await members.find_one({"twitch_id": twitch_data["id"]})
     if twitch_user_in_db is not None:
         if twitch_user_in_db.get("discord_id") is None:
             # no discord account linked, lets do that
@@ -135,7 +133,7 @@ async def command_register(
             await ctx.respond(embed=error_embed)
 
     else:
-        discord_user_in_db: MemberDocument = await members.find_one(
+        discord_user_in_db = await members.find_one(
             {"discord_id": str(ctx.author.id)}
         )
         if discord_user_in_db is None:
@@ -148,7 +146,7 @@ async def command_register(
 
 async def register_new(
     ctx: tanjun.SlashContext,
-    members: motor.AsyncIOMotorCollection,
+    members: motor.AsyncIOMotorCollection[MemberDocument],
     twitch_data: TwitchUserData,
 ) -> None:
     async def perform_update() -> None:
@@ -186,7 +184,7 @@ async def register_new(
 
 async def overwrite_twitch(
     ctx: tanjun.SlashContext,
-    members: motor.AsyncIOMotorCollection,
+    members: motor.AsyncIOMotorCollection[MemberDocument],
     old_document: MemberDocument,
     twitch_data: TwitchUserData,
 ) -> None:
@@ -227,7 +225,7 @@ async def overwrite_twitch(
 
 async def link_exsisting_twitch_to_discord(
     ctx: tanjun.SlashContext,
-    members: motor.AsyncIOMotorCollection,
+    members: motor.AsyncIOMotorCollection[MemberDocument],
     document: MemberDocument,
     twitch_data: TwitchUserData,
 ) -> None:
@@ -266,13 +264,11 @@ async def link_exsisting_twitch_to_discord(
 @tanjun.as_slash_command("unregister", "remove your account.")
 async def command_unregister(
     ctx: tanjun.SlashContext,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document: MemberDocument = await members.find_one(
-        {"discord_id": str(ctx.author.id)}
-    )
+    document = await members.find_one({"discord_id": str(ctx.author.id)})
     if document is None:
         error_embed = hikari.Embed(
             title="Account not found.",
@@ -302,7 +298,7 @@ async def command_unregister(
 @tanjun.as_slash_command("points", "get your points.")
 async def command_points(
     ctx: tanjun.SlashContext,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -333,7 +329,7 @@ component.add_slash_command(twitch_group)
 @component.with_listener(hikari.MemberDeleteEvent)
 async def remove_members_when_they_leave(
     event: hikari.MemberDeleteEvent,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -343,7 +339,7 @@ async def remove_members_when_they_leave(
 @component.with_listener(hikari.MemberUpdateEvent)
 async def update_member_nickname(
     event: hikari.MemberUpdateEvent,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:

@@ -24,7 +24,7 @@ component = tanjun.Component()
 async def on_started(
     event: hikari.StartedEvent,
     bot: hikari.GatewayBot = tanjun.injected(type=hikari.GatewayBot),
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
     scheduler: AsyncIOScheduler = tanjun.injected(type=AsyncIOScheduler),
@@ -49,11 +49,12 @@ async def on_started(
 
 
 async def update_leaderboard(
-    leaderboard_message: hikari.Message, members: motor.AsyncIOMotorCollection
+    leaderboard_message: hikari.Message,
+    members: motor.AsyncIOMotorCollection[MemberDocument],
 ) -> None:
     current_time = int(time.time())
 
-    top_users: list[MemberDocument] = (
+    top_users = (
         await members.find()
         .sort("points", pymongo.DESCENDING)
         .limit(10)

@@ -1,33 +1,41 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import aiohttp
 import tanjun
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from motor import motor_asyncio as motor
 
-from bot import constants
+from bot import constants, types
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, Type
+
+
+D = TypeVar("D")  # noqa: VNE001
 
 
 def _create_collection_injector(
-    collection_name: str,
-) -> Callable[[motor.AsyncIOMotorDatabase], motor.AsyncIOMotorCollection]:
+    collection_name: str, type_: Type[D]
+) -> Callable[[motor.AsyncIOMotorDatabase], motor.AsyncIOMotorCollection[D]]:
     def injector(
         database: motor.AsyncIOMotorDatabase = tanjun.injected(
             type=motor.AsyncIOMotorDatabase
         ),
-    ) -> motor.AsyncIOMotorCollection:
-        return database[collection_name]
+    ) -> motor.AsyncIOMotorCollection[D]:
+        return database[collection_name]  # type: ignore
 
     return injector
 
 
-get_members_db = _create_collection_injector("members")
-get_role_info_db = _create_collection_injector("role_info")
+get_members_db = _create_collection_injector("members", types.MemberDocument)
+get_role_info_db = _create_collection_injector(
+    "role_info", types.RoleInfoDocument
+)
+get_birthday_db = _create_collection_injector(
+    "birthday", types.BirthdayDocument
+)
 
 
 async def register_in_async_context(

@@ -21,7 +21,7 @@ component = tanjun.Component()
 async def sync_admins(
     event: hikari.StartedEvent,
     bot: hikari.GatewayBot = tanjun.injected(type=hikari.GatewayBot),
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -43,7 +43,7 @@ async def sync_admins(
 @component.with_listener(hikari.MemberUpdateEvent)
 async def detect_admin_change(
     event: hikari.MemberUpdateEvent,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -80,7 +80,7 @@ async def command_view_db_entry(
     ctx: tanjun.SlashContext,
     twitch: Optional[str],
     discord: Optional[hikari.Member],
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -89,14 +89,10 @@ async def command_view_db_entry(
         return
 
     if twitch is not None:
-        document: MemberDocument = await members.find_one(
-            {"twitch_name": twitch}
-        )
+        document = await members.find_one({"twitch_name": twitch})
     else:
         discord = cast(hikari.Member, discord)
-        document: MemberDocument = await members.find_one(
-            {"discord_id": str(discord.id)}
-        )
+        document = await members.find_one({"discord_id": str(discord.id)})
 
     if document is None:
         await ctx.respond("Account not found.")
@@ -116,13 +112,11 @@ async def command_tranfere(
     ctx: tanjun.SlashContext,
     from_user: hikari.Member,
     to_user: hikari.Member,
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document: MemberDocument = await members.find_one(
-        {"discord_id": str(from_user.id)}
-    )
+    document = await members.find_one({"discord_id": str(from_user.id)})
     if document is None:
         await ctx.respond("Account not found.")
         return

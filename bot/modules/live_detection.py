@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
     from motor import motor_asyncio as motor
 
+    from bot.types import MemberDocument
 
 component = tanjun.Component()
 
@@ -38,7 +39,7 @@ def get_member_streaming_activity(
 
 
 async def update_streaming_status(
-    members: motor.AsyncIOMotorCollection,
+    members: motor.AsyncIOMotorCollection[MemberDocument],
     member_id: int,
     streaming_act: Optional[hikari.Activity],
 ) -> None:
@@ -64,7 +65,7 @@ async def update_streaming_status(
 async def sync_live_channels(
     event: hikari.StartedEvent,
     bot: hikari.GatewayBot = tanjun.injected(type=hikari.GatewayBot),
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
@@ -80,7 +81,7 @@ async def sync_live_channels(
 async def update_member(
     event: hikari.PresenceUpdateEvent,
     bot: hikari.GatewayBot = tanjun.injected(type=hikari.GatewayBot),
-    members: motor.AsyncIOMotorCollection = tanjun.injected(
+    members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:

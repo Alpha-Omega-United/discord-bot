@@ -20,7 +20,7 @@ component = tanjun.Component()
 async def sync_roles(
     event: hikari.StartedEvent,
     bot: hikari.GatewayBot = tanjun.injected(type=hikari.GatewayBot),
-    role_info: motor.AsyncIOMotorCollection = tanjun.injected(
+    role_info: motor.AsyncIOMotorCollection[RoleInfoDocument] = tanjun.injected(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
@@ -43,7 +43,7 @@ async def sync_roles(
 @component.with_listener(hikari.RoleCreateEvent)
 async def create_new_role(
     event: hikari.RoleCreateEvent,
-    role_info: motor.AsyncIOMotorCollection = tanjun.injected(
+    role_info: motor.AsyncIOMotorCollection[RoleInfoDocument] = tanjun.injected(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
@@ -71,7 +71,7 @@ async def remove_deleted_roles(
 @component.with_listener(hikari.RoleUpdateEvent)
 async def store_new_role_info(
     event: hikari.RoleUpdateEvent,
-    role_info: motor.AsyncIOMotorCollection = tanjun.injected(
+    role_info: motor.AsyncIOMotorCollection[RoleInfoDocument] = tanjun.injected(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
@@ -92,12 +92,12 @@ async def store_new_role_info(
 async def command_role(
     ctx: tanjun.SlashContext,
     role: hikari.Role,
-    role_info: motor.AsyncIOMotorCollection = tanjun.injected(
+    role_info: motor.AsyncIOMotorCollection[RoleInfoDocument] = tanjun.injected(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
 
-    role_data: RoleInfoDocument = await role_info.find_one({"role_id": role.id})
+    role_data = await role_info.find_one({"role_id": role.id})
 
     if role_data is None:
         await ctx.respond(
