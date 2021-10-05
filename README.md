@@ -1,6 +1,6 @@
 # AoU Discord Bot
 This is the custom discord bot used on the [Alpha Omega United](https://discord.gg/KPuHwjMyCH) discord server.
-The bot is written in python using [discord.py](https://discordpy.readthedocs.io/en/stable/) and [discord-py-slash-commands](https://discord-py-slash-command.readthedocs.io/en/latest/index.html),
+The bot is written in python,
 the project is managed with [poetry](https://python-poetry.org/docs/).
 
 ## Running
