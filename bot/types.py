@@ -40,7 +40,6 @@ class RoleInfoDocument(MongoDbDocument):
 class BirthdayDocument(MongoDbDocument):
     discord_id: int
     date: datetime
-    announced: bool
 
 
 # twitch

@@ -8,13 +8,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Generic, Literal, TypeVar
 
 if TYPE_CHECKING:
+    import datetime as dt
     from typing import Any
 
     import bson
     import pymongo
 
 D = TypeVar("D")
-JSON = str | int | float | list[JSON] | dict[JSON]
+DATE = dt.datetime | dt.date
+JSON = str | int | float | list[JSON] | dict[JSON] | DATE
 
 class AsyncIOMotorClient:
     def __init__(
@@ -54,7 +56,7 @@ class AsyncIOMotorCursor(Generic[D]):
         self, key_or_list: str | list[str], direction: None | int = None
     ) -> AsyncIOMotorCursor[D]: ...
     def limit(self, limit: int) -> AsyncIOMotorCursor[D]: ...
-    async def to_list(self, length: int) -> list[D]: ...
+    async def to_list(self, length: None | int) -> list[D]: ...
 
 AsyncIOMotorClientSession = ...
 AsyncIOMotorCommandCursor = ...

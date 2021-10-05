@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import hikari
 import tanjun
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot import constants, injectors
 
@@ -18,6 +20,24 @@ HUMAN_DATE_FORMAT = "dd/mm"
 
 
 component = tanjun.Component()
+
+
+async def send_birthday_msg(
+    rest: hikari.impl.RESTClientImpl,
+    discord_id: int,
+) -> None:
+    embed = hikari.Embed(
+        title="Happy Birthday!",
+        description="".join(
+            [
+                f"it is <@{discord_id}> birthday 🥳\n\n",
+                "dont forget to wish them a happy birthday!",
+            ]
+        ),
+        color=constants.Colors.GREEN,
+    )
+
+    await rest.create_message(constants.BIRTHDAY_CHANNEL_ID, embed=embed)
 
 
 @component.with_slash_command
@@ -58,7 +78,7 @@ async def command_birthday(
             "discord_id": ctx.author.id,
         },
         {
-            "$set": {"date": date_d, "announced": False},
+            "$set": {"date": date_d},
             "$setOnInsert": {"discord_id": ctx.author.id},
         },
         upsert=True,
@@ -68,6 +88,36 @@ async def command_birthday(
         "great! I will remind everyone at "
         f"<t:{int(date_d.timestamp())}:D> in <#{constants.BIRTHDAY_CHANNEL_ID}> :D"
     )
+
+
+async def check_birthdays(
+    rest: hikari.impl.RESTClientImpl,
+    birthday_db: motor.AsyncIOMotorCollection[BirthdayDocument],
+) -> None:
+    today = datetime.today()
+    birthdays = await birthday_db.find({"date": {"$lte": today}}).to_list(None)
+
+    for birthday in birthdays:
+        await send_birthday_msg(rest, birthday["discord_id"])
+        new_date = birthday["date"]
+        new_date = datetime(new_date.year + 1, new_date.month, new_date.day)
+        await birthday_db.update_one(
+            {"_id": birthday["_id"]}, {"$set": {"date": new_date}}
+        )
+
+
+@component.with_listener(hikari.StartedEvent)
+async def start_scheduler(
+    event: hikari.StartedEvent,
+    scheduler: AsyncIOScheduler = tanjun.injected(type=AsyncIOScheduler),
+    rest: hikari.impl.RESTClientImpl = tanjun.injected(
+        type=hikari.impl.RESTClientImpl
+    ),
+    birthday: motor.AsyncIOMotorCollection[BirthdayDocument] = tanjun.injected(
+        callback=injectors.get_birthday_db
+    ),
+) -> None:
+    scheduler.add_job(check_birthdays, "cron", hour=0, args=[rest, birthday])
 
 
 @tanjun.as_loader
