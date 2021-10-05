@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, TypedDict, Union
 
 if TYPE_CHECKING:
@@ -37,7 +39,7 @@ class RoleInfoDocument(MongoDbDocument):
 
 class BirthdayDocument(MongoDbDocument):
     discord_id: int
-    birthday: datetime
+    date: datetime
     announced: bool
 
 

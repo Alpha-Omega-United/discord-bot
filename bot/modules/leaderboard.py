@@ -55,10 +55,7 @@ async def update_leaderboard(
     current_time = int(time.time())
 
     top_users = (
-        await members.find()
-        .sort("points", pymongo.DESCENDING)
-        .limit(10)
-        .to_list()
+        await members.find().sort("points", pymongo.DESCENDING).to_list(10)
     )
 
     description_lines: list[str] = []

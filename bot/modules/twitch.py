@@ -302,9 +302,7 @@ async def command_points(
         callback=injectors.get_members_db
     ),
 ) -> None:
-    document: MemberDocument = await members.find_one(
-        {"discord_id": str(ctx.author.id)}
-    )
+    document = await members.find_one({"discord_id": str(ctx.author.id)})
     if document is None:
         error_embed = hikari.Embed(
             title="Account not found.",
