@@ -2,7 +2,7 @@
 name = "aou discord"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["vivax <vivax3794@protonmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -16,7 +16,6 @@ taskipy = "^1.8.1"
 APScheduler = "^3.7.0"
 motor = "^2.5.1"
 hikari-tanjun = { git="https://github.com/FasterSpeeding/Tanjun" }
-# typing-extensions = "^3.10.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
