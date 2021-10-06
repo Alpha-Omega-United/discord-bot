@@ -35,7 +35,6 @@ def load_required(key: str) -> str:
 
     Raises:
         EnvironmentError: key not found
-
     """
     value = os.getenv(key, None)
     if value is None:
@@ -79,6 +78,8 @@ class Paths:
 
 
 class Colors:
+    """Default colors."""
+
     RED = hikari.Color(0xFF0000)
     GREEN = hikari.Color(0x07E500)
     BLUE = hikari.Color(0x0044F2)

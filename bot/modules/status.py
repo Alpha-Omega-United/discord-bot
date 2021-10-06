@@ -1,3 +1,5 @@
+"""Bot status."""
+
 import os
 import sys
 import time
@@ -23,7 +25,6 @@ async def command_status(
         ctx (tanjun.abc.SlashContext): The interaction context
         bot (hikari.GatewayBot, optional): hikari bot instace, used to get latency.
     """
-
     embed = (
         hikari.Embed(title="Bot status", color=constants.Colors.GREEN)
         .add_field(name="os", value=os.uname().release, inline=True)
@@ -51,6 +52,12 @@ async def command_status(
 async def store_start_time(
     event: hikari.StartedEvent,
 ) -> None:
+    """
+    Store the time the bot started.
+
+    Args:
+        event (hikari.StartedEvent): The start event
+    """
     component.metadata["start_time"] = int(time.time())
 
 
@@ -61,6 +68,14 @@ async def send_online_embed(
         type=hikari.impl.RESTClientImpl
     ),
 ) -> None:
+    """
+    Send an embed when the bot start.
+
+    Args:
+        event (hikari.StartedEvent): Start event.
+        rest (hikari.impl.RESTClientImpl, optional):
+            Rest application to create message with.
+    """
     embed = hikari.Embed(
         title="Bot online",
         color=constants.Colors.GREEN,

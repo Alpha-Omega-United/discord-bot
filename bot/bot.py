@@ -12,6 +12,12 @@ tanjun.as_slash_command = functools.partial(
 
 
 def create_bot() -> hikari.GatewayBot:
+    """
+    Create bot instace.
+
+    Returns:
+        hikari.GatewayBot: The bot instance created.
+    """
     intents = hikari.Intents.ALL
 
     bot = hikari.GatewayBot(constants.TOKEN, intents=intents)

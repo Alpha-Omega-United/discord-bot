@@ -1,3 +1,5 @@
+"""Birthday shoutouts."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -26,6 +28,13 @@ async def send_birthday_msg(
     rest: hikari.impl.RESTClientImpl,
     discord_id: int,
 ) -> None:
+    """
+    Send message to inform users of somebodies birthday.
+
+    Args:
+        rest (hikari.impl.RESTClientImpl): Rest client to send message with.
+        discord_id (int): Id of user who has a birthday
+    """
     embed = hikari.Embed(
         title="Happy Birthday!",
         description="".join(
@@ -56,6 +65,15 @@ async def command_birthday(
         callback=injectors.get_birthday_db
     ),
 ) -> None:
+    """
+    Register a users birthday.
+
+    Args:
+        ctx (tanjun.SlashContext): The commands context
+        date (str): User porivded date
+        birthday (motor.AsyncIOMotorCollection[BirthdayDocument], optional):
+            Db to store data in.
+    """
     try:
         date_d = datetime.strptime(date, DATE_FORMAT)
     except ValueError:
@@ -94,6 +112,14 @@ async def check_birthdays(
     rest: hikari.impl.RESTClientImpl,
     birthday_db: motor.AsyncIOMotorCollection[BirthdayDocument],
 ) -> None:
+    """
+    Check if anybody has a birthday today.
+
+    Args:
+        rest (hikari.impl.RESTClientImpl): Rest client to send messages with
+        birthday_db (motor.AsyncIOMotorCollection[BirthdayDocument]):
+            Db to get birthdays from
+    """
     today = datetime.today()
     birthdays = await birthday_db.find({"date": {"$lte": today}}).to_list(None)
 
@@ -117,9 +143,25 @@ async def start_scheduler(
         callback=injectors.get_birthday_db
     ),
 ) -> None:
+    """
+    Start the loop checking for birthdays each day.
+
+    Args:
+        event (hikari.StartedEvent): The start event
+        scheduler (AsyncIOScheduler): scheduler to user
+        rest (hikari.impl.RESTClientImpl, optional): Rest client to send messages with
+        birthday (motor.AsyncIOMotorCollection[BirthdayDocument], optional):
+            db to get birthdays from
+    """
     scheduler.add_job(check_birthdays, "cron", hour=0, args=[rest, birthday])
 
 
 @tanjun.as_loader
 def load_component(client: tanjun.Client) -> None:
+    """
+    Add component to client.
+
+    Args:
+        client (tanjun.Client): Client to add component to
+    """
     client.add_component(component)

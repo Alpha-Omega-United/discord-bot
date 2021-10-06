@@ -1,3 +1,5 @@
+"""Helper functions."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,6 +16,15 @@ if TYPE_CHECKING:
 
 
 def is_admin(member: hikari.Member) -> bool:
+    """
+    Check if a member is an admin.
+
+    Args:
+        member (hikari.Member): Member to check
+
+    Returns:
+        bool: If the member is an admin or not
+    """
     roles = member.get_roles()
     return any(role.id == constants.ADMIN_ROLE_ID for role in roles)
 
@@ -23,6 +34,24 @@ async def wait_for_interaction(
     message: hikari.Message,
     timeout: int | float = 60 * 5,
 ) -> hikari.ComponentInteraction:
+    """
+    Wait for an interaction to happen on the message.
+
+    Args:
+        ctx (tanjun.SlashContext): The context the message was sent in.
+        message (hikari.Message): The message to wait for interactions on.
+        timeout (int | float):
+            How long to wait before stop waiting.
+            Defaults to 60*5 (5 minutes).
+
+    Returns:
+        hikari.ComponentInteraction:
+        the event, garantied to contain a ComponentInteraction
+
+    Raises:
+        TypeError: ctx.events is None
+    """
+
     def predicate(event: hikari.InteractionCreateEvent) -> bool:
         inte = event.interaction
         return (
@@ -41,6 +70,8 @@ async def wait_for_interaction(
 
 @dataclass(frozen=True)
 class ButtonInfo:
+    """Info about a discord button."""
+
     label: str
     style: hikari.InteractiveButtonTypesT
     emoji: hikari.Snowflakeish | hikari.Emoji | str | hikari.UndefinedType = (
@@ -56,6 +87,18 @@ async def confirmation_embed(
     confirm_button: ButtonInfo,
     deny_button: ButtonInfo = ButtonInfo("Cancel", hikari.ButtonStyle.DANGER),
 ) -> None:
+    """
+    Create a confirmation embed and call a callback if the user confirms.
+
+    Args:
+        ctx (tanjun.SlashContext): The context to create the popup in
+        callback (Awaitable[None]): The callback to call if the user click confirm
+        embed (hikari.Embed): The embed to present the user with.
+        confirm_button (ButtonInfo): The button the confirms the selection.
+        deny_button (ButtonInfo):
+            The button to cancel the action.
+            Defaults to ButtonInfo("Cancel", hikari.ButtonStyle.DANGER).
+    """
     confirm_button_id = "confirm"
     deny_button_id = "deny"
 

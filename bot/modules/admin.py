@@ -1,3 +1,5 @@
+"""Admin commands and managment."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
@@ -8,8 +10,6 @@ import tanjun
 from bot import constants, injectors, utils
 
 if TYPE_CHECKING:
-    from typing import Optional
-
     from motor import motor_asyncio as motor
 
     from bot.types import MemberDocument
@@ -25,6 +25,15 @@ async def sync_admins(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Sync admins to db.
+
+    Args:
+        event (hikari.StartedEvent): The start event
+        bot (hikari.GatewayBot, optional): Bot to get data from
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to store data in
+    """
     guild = await bot.rest.fetch_guild(constants.GUILD_ID)
     admin_ids: list[str] = []
     for member_id, member in guild.get_members().items():
@@ -47,6 +56,14 @@ async def detect_admin_change(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Store new admin info.
+
+    Args:
+        event (hikari.MemberUpdateEvent): The member update event
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to store data in
+    """
     is_admin = utils.is_admin(event.member)
     await members.update_one(
         {"discord_id": str(event.user_id)}, {"$set": {"isAdmin": is_admin}}
@@ -61,6 +78,15 @@ admin_group = tanjun.slash_command_group(
 
 
 def format_data_for_discord(document: MemberDocument) -> hikari.Embed:
+    """
+    Format member date into a discord embed.
+
+    Args:
+        document (MemberDocument): Document to format
+
+    Returns:
+        hikari.Embed: Embed that is generatd.
+    """
     return (
         hikari.Embed(title="Data for user.", color=constants.Colors.BLUE)
         .add_field("twitch_name", str(document.get("twitch_name")), inline=True)
@@ -78,12 +104,22 @@ def format_data_for_discord(document: MemberDocument) -> hikari.Embed:
 @tanjun.as_slash_command("view", "view somebodies db entry.")
 async def command_view_db_entry(
     ctx: tanjun.SlashContext,
-    twitch: Optional[str],
-    discord: Optional[hikari.Member],
+    twitch: None | str,
+    discord: None | hikari.Member,
     members: motor.AsyncIOMotorCollection[MemberDocument] = tanjun.injected(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    View somebodies db entry.
+
+    Args:
+        ctx (tanjun.SlashContext): The commands context
+        twitch (None | str): Optional twitch name
+        discord (None | hikari.Member): Optional discord name
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to get data from
+    """
     if (twitch is None) == (discord is None):
         await ctx.respond("Please only provide one of `twitch` or `discord`")
         return
@@ -116,6 +152,15 @@ async def command_tranfere(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Transfere the ownership of a db account.
+
+    Args:
+        ctx (tanjun.SlashContext): The commands context
+        from_user (hikari.Member): Current owner
+        to_user (hikari.Member): New owner
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional): Db to update in
+    """
     document = await members.find_one({"discord_id": str(from_user.id)})
     if document is None:
         await ctx.respond("Account not found.")
@@ -153,6 +198,13 @@ async def make_admin_admin_only(
         type=hikari.impl.RESTClientImpl
     ),
 ) -> None:
+    """
+    Change permissions of admin group to Admin only.
+
+    Args:
+        event (hikari.StartedEvent): start event
+        rest (hikari.impl.RESTClientImpl, optional): Rest client to get data from
+    """
     application = await rest.fetch_application()
     commands = await rest.fetch_application_commands(
         application, constants.GUILD_ID
@@ -175,4 +227,10 @@ async def make_admin_admin_only(
 
 @tanjun.as_loader
 def load_component(client: tanjun.Client) -> None:
+    """
+    Add component to client.
+
+    Args:
+        client (tanjun.Client): Client to add component to
+    """
     client.add_component(component)

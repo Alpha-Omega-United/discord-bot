@@ -1,3 +1,5 @@
+"""Type depedecies for the bot."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
@@ -41,6 +43,14 @@ get_birthday_db = _create_collection_injector(
 async def register_in_async_context(
     client: tanjun.Client = tanjun.injected(type=tanjun.Client),
 ) -> None:
+    """
+    Register type dependecies.
+
+    Args:
+        client (tanjun.Client, optional):
+            he client to register dependecies to.
+            Defaults to tanjun.injected(type=tanjun.Client).
+    """
     scheduler = AsyncIOScheduler()
     scheduler.start()
 
@@ -57,6 +67,12 @@ async def register_in_async_context(
 
 
 def register_injectors(client: tanjun.Client) -> None:
+    """
+    Register all the type depencecies.
+
+    Args:
+        client (tanjun.Client): Client to register dependecies on.
+    """
     client.add_client_callback(
         tanjun.ClientCallbackNames.STARTING, register_in_async_context
     )

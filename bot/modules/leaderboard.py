@@ -1,3 +1,5 @@
+"""Points leaderboard."""
+
 from __future__ import annotations
 
 import time
@@ -29,6 +31,19 @@ async def on_started(
     ),
     scheduler: AsyncIOScheduler = tanjun.injected(type=AsyncIOScheduler),
 ) -> None:
+    """
+    Create or get leaderboard message.
+
+    Args:
+        event (hikari.StartedEvent): start event
+        bot (hikari.GatewayBot, optional): bot to get data from
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            db to get points from
+        scheduler (AsyncIOScheduler): scheduler to use to repeat task
+
+    Raises:
+        TypeError: Leaderboard channel is not a text channel
+    """
     channel = await bot.rest.fetch_channel(LEADERBOARD_CHANNEL_ID)
     if not isinstance(channel, hikari.TextableChannel):
         raise TypeError("Expected text channel.")
@@ -52,6 +67,13 @@ async def update_leaderboard(
     leaderboard_message: hikari.Message,
     members: motor.AsyncIOMotorCollection[MemberDocument],
 ) -> None:
+    """
+    Update leaderboard with new data.
+
+    Args:
+        leaderboard_message (hikari.Message): Message to update
+        members (motor.AsyncIOMotorCollection[MemberDocument]): Db to grab data from
+    """
     current_time = int(time.time())
 
     top_users = (

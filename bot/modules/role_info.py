@@ -1,3 +1,5 @@
+"""Role info commands."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -24,6 +26,15 @@ async def sync_roles(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
+    """
+    Sync roles in the guild with the db.
+
+    Args:
+        event (hikari.StartedEvent): The start event.
+        bot (hikari.GatewayBot, optional): Bot to get guild date from.
+        role_info (motor.AsyncIOMotorCollection[RoleInfoDocument], optional):
+            Db to store role info in.
+    """
     guild = await bot.rest.fetch_guild(constants.GUILD_ID)
 
     for role_id, role in guild.get_roles().items():
@@ -47,6 +58,14 @@ async def create_new_role(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
+    """
+    Store new role when one is created.
+
+    Args:
+        event (hikari.RoleCreateEvent): Role created event
+        role_info (motor.AsyncIOMotorCollection[RoleInfoDocument], optional):
+            Db to store role info in.
+    """
     role = event.role
     await role_info.insert_one(
         {
@@ -65,6 +84,13 @@ async def remove_deleted_roles(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
+    """
+    Remove role when it is deleted.
+
+    Args:
+        event (hikari.RoleDeleteEvent): Role delete event
+        role_info (motor.AsyncIOMotorCollection, optional): Db to remove role from.
+    """
     await role_info.delete_one({"role_id": event.role_id})
 
 
@@ -75,6 +101,14 @@ async def store_new_role_info(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
+    """
+    Update role info when role is updated.
+
+    Args:
+        event (hikari.RoleUpdateEvent): Role update event
+        role_info (motor.AsyncIOMotorCollection[RoleInfoDocument], optional):
+            Db to update info in.
+    """
     await role_info.update_one(
         {"role_id": event.role_id},
         {
@@ -96,7 +130,15 @@ async def command_role(
         callback=injectors.get_role_info_db
     ),
 ) -> None:
+    """
+    Get description of role.
 
+    Args:
+        ctx (tanjun.SlashContext): The commands context.
+        role (hikari.Role): The role to get info of.
+        role_info (motor.AsyncIOMotorCollection[RoleInfoDocument], optional):
+            Db to get info from.
+    """
     role_data = await role_info.find_one({"role_id": role.id})
 
     if role_data is None:
@@ -114,4 +156,10 @@ async def command_role(
 
 @tanjun.as_loader
 def load_component(client: tanjun.Client) -> None:
+    """
+    Add component to client.
+
+    Args:
+        client (tanjun.Client): Client to add component to.
+    """
     client.add_component(component)

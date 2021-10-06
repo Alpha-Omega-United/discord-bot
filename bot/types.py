@@ -1,3 +1,5 @@
+"""Types for helping in type hinting."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypedDict
@@ -10,15 +12,21 @@ if TYPE_CHECKING:
 
 
 class MongoDbDocument(TypedDict):
+    """Keys common to all Mongo documents."""
+
     _id: bson.ObjectId
 
 
 class StreamData(TypedDict):
+    """Data describing a twitch stream in the db."""
+
     where: str
     url: str
 
 
 class MemberDocument(MongoDbDocument):
+    """Data describing a user in the db."""
+
     twitch_name: str
     twitch_id: int
 
@@ -31,6 +39,8 @@ class MemberDocument(MongoDbDocument):
 
 
 class RoleInfoDocument(MongoDbDocument):
+    """Data describing a role in the db."""
+
     role_id: int
     color: str
     description: str
@@ -38,6 +48,8 @@ class RoleInfoDocument(MongoDbDocument):
 
 
 class BirthdayDocument(MongoDbDocument):
+    """Data describing a birthday in the db."""
+
     discord_id: int
     date: datetime
 
@@ -46,6 +58,8 @@ class BirthdayDocument(MongoDbDocument):
 
 
 class _TwitchUserDataBase(TypedDict):
+    """Response from the twitch api."""
+
     brodcaster_type: Literal["partner", "affiliate", ""]
     description: str
     display_name: str
@@ -58,21 +72,30 @@ class _TwitchUserDataBase(TypedDict):
 
 
 class TwitchUserDataRaw(_TwitchUserDataBase):
+    """The raw data from the twitch api."""
+
     id: str  # noqa: A003
 
 
 class TwitchUserData(_TwitchUserDataBase):
+    """The edited date from the twitch api."""
+
     id: int  # noqa: A003
 
 
 class TwitchSuccessResponse(TypedDict):
+    """Response from the twitch api when everything goes well."""
+
     data: list[TwitchUserDataRaw]
 
 
 class TwitchErrorResponse(TypedDict):
+    """Response from the twitch api when stuff goes wrong."""
+
     error: str
     status: int
     message: str
 
 
+# Possible responses from twitch api
 TwitchResponse = TwitchSuccessResponse | TwitchErrorResponse

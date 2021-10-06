@@ -13,8 +13,6 @@ from bot import constants, injectors, utils
 from bot.types import TwitchErrorResponse, TwitchUserData
 
 if TYPE_CHECKING:
-    from typing import Optional
-
     from motor import motor_asyncio as motor
 
     from bot.types import MemberDocument, TwitchResponse
@@ -40,6 +38,13 @@ async def grab_twitch_token(
         type=aiohttp.ClientSession
     ),
 ) -> None:
+    """
+    Get twich token from twitch api.
+
+    Args:
+        event (hikari.StartedEvent): Start event
+        http_session (aiohttp.ClientSession, optional): Http session to make request with
+    """
     params = {
         "client_id": constants.TWITCH_CLIENT_ID,
         "client_secret": constants.TWITCH_CLIENT_SECRET,
@@ -54,7 +59,20 @@ async def grab_twitch_token(
 
 async def get_twitch_data(
     http_session: aiohttp.ClientSession, username: str
-) -> Optional[TwitchUserData]:
+) -> None | TwitchUserData:
+    """
+    Get data on a twitch user.
+
+    Args:
+        http_session (aiohttp.ClientSession): Http session to make request with
+        username (str): username to lookup
+
+    Raises:
+        Exception: An error was returned from the twitch api
+
+    Returns:
+        None | TwitchUserData: The data from the user, or None if not found
+    """
     headers = {
         "Authorization": f"Bearer {component.metadata['twitch_token']}",
         "Client-Id": constants.TWITCH_CLIENT_ID,
@@ -94,6 +112,16 @@ async def command_register(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Register a twitch user.
+
+    Args:
+        ctx (tanjun.SlashContext): The commands context
+        username (str): twitch username to register
+        http_session (aiohttp.ClientSession, optional): HttpSession to make requests with
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            db collection to edit
+    """
     await ctx.defer()
 
     # detect url
@@ -149,6 +177,15 @@ async def register_new(
     members: motor.AsyncIOMotorCollection[MemberDocument],
     twitch_data: TwitchUserData,
 ) -> None:
+    """
+    Register a new twitch user.
+
+    Args:
+        ctx (tanjun.SlashContext): Context to create messages in
+        members (motor.AsyncIOMotorCollection[MemberDocument]): Database to add user to
+        twitch_data (TwitchUserData): Twitch data from user to register
+    """
+
     async def perform_update() -> None:
         author = await ctx.rest.fetch_member(constants.GUILD_ID, ctx.author)
 
@@ -188,6 +225,17 @@ async def overwrite_twitch(
     old_document: MemberDocument,
     twitch_data: TwitchUserData,
 ) -> None:
+    """
+    Overwrite exsisting twitch data for account.
+
+    Args:
+        ctx (tanjun.SlashContext): Context to create messages in
+        members (motor.AsyncIOMotorCollection[MemberDocument]):
+            Database to edit account in
+        old_document (MemberDocument): Exsisting account data
+        twitch_data (TwitchUserData): New twitch data
+    """
+
     async def perform_update() -> None:
         await members.update_one(
             {"_id": old_document["_id"]},
@@ -229,6 +277,16 @@ async def link_exsisting_twitch_to_discord(
     document: MemberDocument,
     twitch_data: TwitchUserData,
 ) -> None:
+    """
+    Add discord link to twitch account.
+
+    Args:
+        ctx (tanjun.SlashContext): Context to create messages in
+        members (motor.AsyncIOMotorCollection[MemberDocument]): Db to edit account in
+        document (MemberDocument): Exsisting account data
+        twitch_data (TwitchUserData): Twitch data for user
+    """
+
     async def perform_update() -> None:
         member = await ctx.rest.fetch_member(constants.GUILD_ID, ctx.author.id)
         await members.update_one(
@@ -268,6 +326,14 @@ async def command_unregister(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Remove account from db.
+
+    Args:
+        ctx (tanjun.SlashContext): The commands context
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to remove account from.
+    """
     document = await members.find_one({"discord_id": str(ctx.author.id)})
     if document is None:
         error_embed = hikari.Embed(
@@ -302,6 +368,14 @@ async def command_points(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    See users points.
+
+    Args:
+        ctx (tanjun.SlashContext): The slash commands context.
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to get points from.
+    """
     document = await members.find_one({"discord_id": str(ctx.author.id)})
     if document is None:
         error_embed = hikari.Embed(
@@ -331,6 +405,14 @@ async def remove_members_when_they_leave(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Remove a member from db when they leave.
+
+    Args:
+        event (hikari.MemberDeleteEvent): The user leave event
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to remove user from.
+    """
     await members.delete_one({"discord_id": str(event.user_id)})
 
 
@@ -341,6 +423,14 @@ async def update_member_nickname(
         callback=injectors.get_members_db
     ),
 ) -> None:
+    """
+    Update users nickname when they change it.
+
+    Args:
+        event (hikari.MemberUpdateEvent): the member update event
+        members (motor.AsyncIOMotorCollection[MemberDocument], optional):
+            Db to edit name in.
+    """
     current_name = f"{event.member.username}#{event.member.discriminator}"
     await members.update_one(
         {"discord_id": str(event.user_id)},
@@ -350,4 +440,10 @@ async def update_member_nickname(
 
 @tanjun.as_loader
 def load_component(client: tanjun.Client) -> None:
+    """
+    Add commands to client.
+
+    Args:
+        client (tanjun.Client): Client to add commands to
+    """
     client.add_component(component)
