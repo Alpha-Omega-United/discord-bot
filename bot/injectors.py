@@ -31,7 +31,6 @@ def _create_collection_injector(
     return injector
 
 
-get_members_db = _create_collection_injector("members", types.MemberDocument)
 get_role_info_db = _create_collection_injector(
     "role_info", types.RoleInfoDocument
 )

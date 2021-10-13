@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from datetime import datetime
-    from typing import Literal, Optional
+    from typing import Literal
 
     import bson
 
@@ -15,27 +15,6 @@ class MongoDbDocument(TypedDict):
     """Keys common to all Mongo documents."""
 
     _id: bson.ObjectId
-
-
-class StreamData(TypedDict):
-    """Data describing a twitch stream in the db."""
-
-    where: str
-    url: str
-
-
-class MemberDocument(MongoDbDocument):
-    """Data describing a user in the db."""
-
-    twitch_name: str
-    twitch_id: int
-
-    discord_name: Optional[str]
-    discord_id: Optional[int]
-
-    points: int
-    stream: Optional[StreamData]
-    isAdmin: bool  # noqa: N815
 
 
 class RoleInfoDocument(MongoDbDocument):
@@ -69,33 +48,3 @@ class _TwitchUserDataBase(TypedDict):
     type: Literal["staff", "admin", "global_mod", ""]  # noqa: A003
     view_count: int
     created_at: str
-
-
-class TwitchUserDataRaw(_TwitchUserDataBase):
-    """The raw data from the twitch api."""
-
-    id: str  # noqa: A003
-
-
-class TwitchUserData(_TwitchUserDataBase):
-    """The edited date from the twitch api."""
-
-    id: int  # noqa: A003
-
-
-class TwitchSuccessResponse(TypedDict):
-    """Response from the twitch api when everything goes well."""
-
-    data: list[TwitchUserDataRaw]
-
-
-class TwitchErrorResponse(TypedDict):
-    """Response from the twitch api when stuff goes wrong."""
-
-    error: str
-    status: int
-    message: str
-
-
-# Possible responses from twitch api
-TwitchResponse = TwitchSuccessResponse | TwitchErrorResponse
